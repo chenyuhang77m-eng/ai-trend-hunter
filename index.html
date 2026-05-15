@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>AI热点捕手 · 全网热点 & 热销日更看板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@400;600;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>
+<style>
+  :root{
+    --ink:#0d0c0a;--paper:#f4ede1;--paper-2:#ece2cf;--paper-3:#e3d6bb;
+    --accent:#c8331f;--accent-2:#1a4d3f;--accent-3:#d99c2b;--muted:#605747;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink);font-family:"Fraunces","Noto Serif SC",Georgia,serif;-webkit-font-smoothing:antialiased;font-feature-settings:"liga","kern","ss01"}
+  body{
+    background:radial-gradient(1200px 800px at 100% -10%,rgba(200,51,31,.06),transparent 60%),
+               radial-gradient(900px 700px at -10% 110%,rgba(26,77,63,.05),transparent 60%),var(--paper);
+    background-attachment:fixed;min-height:100vh;padding:0 0 80px;position:relative;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode:multiply;opacity:.6;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:0 28px;position:relative;z-index:2}
+
+  /* MASTHEAD */
+  .masthead{border-bottom:2px solid var(--ink);padding:24px 0 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .masthead .left{display:flex;align-items:center;gap:14px}
+  .mast-mark{width:46px;height:46px;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:"Fraunces",serif;font-weight:900;font-style:italic;font-size:26px;background:var(--ink);color:var(--paper);transform:rotate(-3deg)}
+  .mast-meta{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .mast-meta b{color:var(--ink)}
+  .mast-right{display:flex;gap:18px;align-items:center;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--muted)}
+  .mast-right .live{display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-weight:600}
+  .mast-right .live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(200,51,31,.18);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .ruleline{height:6px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);background:repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 6px)}
+
+  /* HERO */
+  .hero{padding:48px 0 36px;border-bottom:1px solid var(--ink);position:relative}
+  .hero-eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:18px;display:flex;align-items:center;gap:14px}
+  .hero-eyebrow::after{content:"";flex:1;height:1px;background:var(--ink);opacity:.2}
+  .hero h1{font-family:"Fraunces",serif;font-weight:900;font-style:italic;font-size:clamp(56px,9vw,116px);line-height:.92;letter-spacing:-0.03em;color:var(--ink)}
+  .hero h1 .alt{font-style:normal;font-weight:400;color:var(--accent);font-family:"Noto Serif SC",serif;font-size:.7em;letter-spacing:.02em}
+  .hero h1 .stroke{-webkit-text-stroke:1.5px var(--ink);color:transparent;font-style:italic}
+  .hero-sub{margin-top:26px;display:grid;grid-template-columns:1.4fr 1fr;gap:40px;align-items:flex-end}
+  .hero-deck{font-family:"Noto Serif SC",serif;font-size:17px;line-height:1.7;color:var(--muted);max-width:620px}
+  .hero-deck b{color:var(--ink);background:linear-gradient(transparent 60%,var(--accent-3) 60%);padding:0 2px}
+  .hero-byline{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-align:right;line-height:2}
+  .hero-byline b{color:var(--ink)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);margin-top:40px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+  .kpi{padding:22px 18px;border-right:1px solid var(--ink)}
+  .kpi:last-child{border-right:none}
+  .kpi .label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .kpi .num{font-family:"Fraunces",serif;font-weight:900;font-style:italic;font-size:54px;line-height:1;color:var(--ink)}
+  .kpi .unit{font-family:"Noto Serif SC",serif;font-size:13px;color:var(--muted);margin-top:6px}
+  .kpi:nth-child(1) .num{color:var(--accent)}
+  .kpi:nth-child(2) .num{color:var(--accent-2)}
+  .kpi:nth-child(3) .num{color:var(--accent-3)}
+
+  /* SECTION */
+  .section{padding:56px 0 8px;border-bottom:1px solid var(--ink)}
+  .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--ink);flex-wrap:wrap}
+  .section-head .l{display:flex;align-items:baseline;gap:18px}
+  .section-num{font-family:"Fraunces",serif;font-weight:900;font-style:italic;font-size:80px;line-height:.8;color:var(--paper);-webkit-text-stroke:1.5px var(--ink)}
+  .section-head h2{font-family:"Fraunces",serif;font-weight:800;font-style:italic;font-size:38px;letter-spacing:-.02em;line-height:1}
+  .section-head h2 small{display:block;font-family:"JetBrains Mono",monospace;font-style:normal;font-weight:400;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+
+  /* CATEGORY TABS — 8 大品类 */
+  .cat-tabs{display:flex;flex-wrap:wrap;gap:0;border:1.5px solid var(--ink);background:var(--paper);margin-bottom:24px}
+  .cat-tabs .tab{
+    flex:1;min-width:110px;padding:14px 14px;
+    border-right:1px solid var(--ink);
+    font-family:"Noto Serif SC",serif;font-size:14px;font-weight:600;
+    background:var(--paper);color:var(--ink);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:all .15s ease;text-align:center;line-height:1.2;
+    position:relative;
+  }
+  .cat-tabs .tab:last-child{border-right:none}
+  .cat-tabs .tab .ico{font-size:18px}
+  .cat-tabs .tab .cnt{
+    font-family:"JetBrains Mono",monospace;font-size:9px;
+    background:var(--paper-3);color:var(--muted);padding:1px 5px;border-radius:8px;
+    position:absolute;top:6px;right:6px;font-weight:600;
+  }
+  .cat-tabs .tab:hover{background:var(--paper-2)}
+  .cat-tabs .tab.active{background:var(--ink);color:var(--paper)}
+  .cat-tabs .tab.active .cnt{background:var(--accent);color:#fff}
+
+  /* INSIGHT CARD */
+  .insight{display:grid;grid-template-columns:120px 1fr;border:1.5px solid var(--ink);background:var(--paper-2);margin-bottom:24px;box-shadow:6px 6px 0 var(--ink)}
+  .insight .tag{background:var(--ink);color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"Fraunces",serif;font-style:italic;font-weight:900;text-align:center;padding:14px 8px;border-right:1.5px solid var(--ink)}
+  .insight .tag .t1{font-size:11px;letter-spacing:.25em;text-transform:uppercase;font-style:normal;font-weight:600;color:var(--accent-3);margin-bottom:6px;font-family:"JetBrains Mono",monospace}
+  .insight .tag .t2{font-size:32px;line-height:1}
+  .insight .body{padding:18px 22px;display:flex;flex-direction:column;gap:8px}
+  .insight .body .lead{font-family:"Noto Serif SC",serif;font-size:15px;line-height:1.7;color:var(--ink)}
+  .insight .body .lead b{background:linear-gradient(transparent 65%,var(--accent-3) 65%);padding:0 2px}
+  .insight .body .lead em{color:var(--accent);font-style:italic;font-weight:600;font-family:"Fraunces",serif}
+  .insight .body ul{list-style:none;display:flex;flex-wrap:wrap;gap:10px 22px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .insight .body ul li::before{content:"▸ ";color:var(--accent)}
+
+  /* RANK PANELS */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:0;border-top:1px solid var(--ink);border-left:1px solid var(--ink)}
+  .panel{border-right:1px solid var(--ink);border-bottom:1px solid var(--ink);padding:20px 22px;background:var(--paper);position:relative;min-height:140px}
+  .panel:hover{background:var(--paper-2)}
+  .panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px dashed var(--ink)}
+  .panel-title{font-family:"Fraunces",serif;font-weight:800;font-style:italic;font-size:22px;line-height:1.05}
+  .panel-title small{display:block;font-style:normal;font-weight:400;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .panel-source{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--accent);letter-spacing:.1em;text-align:right;line-height:1.5}
+  .rank-list{display:flex;flex-direction:column}
+  .rank-empty{font-family:"Noto Serif SC",serif;font-size:13px;color:var(--muted);padding:8px 0;text-align:center;font-style:italic}
+  .rank-item{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dotted rgba(26,24,21,.18);font-size:14px;line-height:1.4}
+  .rank-item:last-child{border-bottom:none}
+  .rank-num{font-family:"Fraunces",serif;font-weight:900;font-style:italic;color:var(--muted);font-size:18px;text-align:center;line-height:1}
+  .rank-item.top1 .rank-num{color:var(--accent);font-size:24px}
+  .rank-item.top2 .rank-num{color:var(--accent-3);font-size:22px}
+  .rank-item.top3 .rank-num{color:var(--accent-2);font-size:20px}
+  .rank-title{color:var(--ink);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:"Noto Serif SC",serif;font-size:14.5px}
+  .rank-title:hover{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+  .rank-meta{display:flex;align-items:center;gap:6px}
+  .tag{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.08em;padding:2px 6px;border:1px solid currentColor}
+  .tag.hot{color:var(--accent)}.tag.new{color:var(--accent-2)}.tag.buzz{color:#7d3a8c}.tag.tech{color:#1f5fbd}
+  .metric{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
+
+  /* TREND */
+  .trend-grid{display:grid;grid-template-columns:1.4fr 1fr;border:1px solid var(--ink);background:var(--paper)}
+  .trend-grid > .pcard{padding:24px;border-right:1px solid var(--ink)}
+  .trend-grid > .pcard:last-child{border-right:none}
+  .trend-grid.two{grid-template-columns:1fr 1fr;margin-top:18px}
+  .trend-grid.full{grid-template-columns:1fr;margin-top:18px}
+  .pcard-head{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--ink);padding-bottom:12px;margin-bottom:16px;gap:12px}
+  .pcard-head h3{font-family:"Fraunces",serif;font-style:italic;font-weight:800;font-size:24px;line-height:1.1}
+  .pcard-head .meta{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .chart{width:100%;height:340px}
+  .chart.lg{height:420px}
+  .chart.xl{height:480px}
+  .kv-list{display:flex;flex-direction:column}
+  .kv{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px dotted rgba(26,24,21,.2);font-size:13.5px}
+  .kv:last-child{border-bottom:none}
+  .kv .idx{font-family:"Fraunces",serif;font-style:italic;font-weight:900;font-size:17px;color:var(--accent);text-align:center}
+  .kv .l{color:var(--ink);font-family:"Noto Serif SC",serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kv .r{color:var(--muted);font-family:"JetBrains Mono",monospace;font-weight:600;font-size:11px}
+
+  /* DUAL CLOUD */
+  .cloud-row{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;border:1px solid var(--ink);background:var(--paper)}
+  .cloud-cell{padding:24px;border-right:1px solid var(--ink);position:relative}
+  .cloud-cell:last-child{border-right:none}
+  .cloud-cell .badge{
+    position:absolute;top:0;right:0;padding:6px 12px;
+    background:var(--ink);color:var(--paper);
+    font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  }
+  .cloud-cell .badge.green{background:var(--accent-2)}
+  @media (max-width:980px){.cloud-row{grid-template-columns:1fr}.cloud-cell{border-right:none;border-bottom:1px solid var(--ink)}}
+
+  /* EDITORIAL */
+  .editorial{padding:40px 36px;background:var(--ink);color:var(--paper);margin-top:18px;position:relative;overflow:hidden}
+  .editorial::before{content:"❝";position:absolute;top:-20px;right:30px;font-family:"Fraunces",serif;font-size:240px;color:var(--accent);opacity:.3;font-style:italic;line-height:1}
+  .editorial h3{font-family:"Fraunces",serif;font-style:italic;font-weight:800;font-size:30px;margin-bottom:24px;letter-spacing:-.02em}
+  .editorial h3 small{display:block;font-style:normal;font-weight:400;font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent-3);margin-bottom:6px;font-family:"JetBrains Mono",monospace}
+  .editorial .cols{display:grid;grid-template-columns:1fr 1fr;gap:36px}
+  .editorial p{font-family:"Noto Serif SC",serif;font-size:15px;line-height:1.85;color:#d8cfbe}
+  .editorial p b{color:var(--paper);background:linear-gradient(transparent 60%,rgba(217,156,43,.4) 60%);padding:0 2px}
+  .editorial p em{color:var(--accent-3);font-style:italic;font-family:"Fraunces",serif}
+  .dropcap{font-family:"Fraunces",serif;font-style:italic;font-weight:900;font-size:64px;line-height:.85;float:left;margin:6px 12px 0 0;color:var(--accent)}
+
+  footer{margin-top:48px;padding:24px 28px;border-top:2px solid var(--ink);font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+  footer a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--accent)}
+
+  /* MKT PLAYBOOK */
+  .mkt-table{border:1.5px solid var(--ink);background:var(--paper);box-shadow:6px 6px 0 var(--ink);margin-top:8px}
+  .mkt-row{display:grid;grid-template-columns:170px 170px 1.4fr 1.6fr;border-bottom:1px solid var(--ink);min-height:80px}
+  .mkt-row:last-child{border-bottom:none}
+  .mkt-row.head{background:var(--ink);color:var(--paper);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;min-height:42px}
+  .mkt-row > div{padding:14px 16px;border-right:1px dashed rgba(13,12,10,.25);display:flex;flex-direction:column;justify-content:center}
+  .mkt-row.head > div{border-right:1px solid rgba(244,237,225,.18);align-items:flex-start}
+  .mkt-row > div:last-child{border-right:none}
+  .mkt-sub{font-family:"Fraunces",serif;font-style:italic;font-weight:800;font-size:18px;line-height:1.15;color:var(--ink)}
+  .mkt-sub small{display:block;font-style:normal;font-weight:400;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--muted);margin-top:4px;text-transform:uppercase}
+  .mkt-scene{font-family:"Noto Serif SC",serif;font-size:13.5px;color:var(--accent-2);font-weight:600;line-height:1.5}
+  .mkt-topics{display:flex;flex-wrap:wrap;gap:6px}
+  .mkt-topics .chip{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.04em;background:var(--paper-3);color:var(--ink);padding:3px 8px;border:1px solid var(--ink);font-weight:600}
+  .mkt-topics .chip.live{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .mkt-strategy{font-family:"Noto Serif SC",serif;font-size:13.5px;line-height:1.65;color:var(--ink)}
+  .mkt-strategy b{background:linear-gradient(transparent 65%,var(--accent-3) 65%);padding:0 2px}
+  .mkt-strategy em{color:var(--accent);font-style:italic;font-weight:600;font-family:"Fraunces",serif}
+  @media (max-width:980px){
+    .mkt-row{grid-template-columns:1fr;}
+    .mkt-row > div{border-right:none;border-bottom:1px dotted rgba(13,12,10,.2)}
+    .mkt-row.head{display:none}
+    .mkt-row > div::before{content:attr(data-label);display:block;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.15em;color:var(--accent);margin-bottom:4px;text-transform:uppercase}
+  }
+
+  @media (max-width:980px){
+    .kpis{grid-template-columns:repeat(2,1fr)}.kpi:nth-child(2){border-right:none}
+    .trend-grid,.trend-grid.two{grid-template-columns:1fr}
+    .trend-grid > .pcard{border-right:none;border-bottom:1px solid var(--ink)}
+    .editorial .cols{grid-template-columns:1fr}.hero-sub{grid-template-columns:1fr}
+    .hero-byline{text-align:left}.insight{grid-template-columns:80px 1fr}.insight .tag .t2{font-size:24px}
+    .cat-tabs .tab{min-width:80px;padding:10px 8px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="left">
+      <div class="mast-mark">捕</div>
+      <div>
+        <div class="mast-meta"><b>AI热点捕手</b> · 全网热点日刊 · NO.<span id="issueNum">001</span></div>
+        <div class="mast-meta">每日 10:00 北京时间出版 · 八大品类视角</div>
+      </div>
+    </div>
+    <div class="mast-right">
+      <span class="live">LIVE</span>
+      <span>VOL.2026 · <b id="curDate">--</b></span>
+      <span>归档 <b id="totalDays">--</b> 期</span>
+    </div>
+  </div>
+  <div class="ruleline"></div>
+
+  <header class="hero">
+    <div class="hero-eyebrow">AI Trend Hunter · 全网热搜 + 电商热销 · 按八大品类聚合</div>
+    <h1><span class="stroke">AI</span><span class="alt">热点</span><br/><i>捕</i> <span style="color:var(--accent)">手.</span></h1>
+    <div class="hero-sub">
+      <p class="hero-deck">
+        从 <b>微博 / 百度 / 夸克 / 搜狗 / 360</b> 五大热搜,到 <b>淘宝天猫 / 京东 / 快手电商 / 今日热卖</b> 四大电商榜单。
+        每日同步,按 <b>3C数码 / 家居家装 / 家电 / 母婴 / 食品 / 美妆 / 服饰 / 平台教育</b> 八大品类自动归类、筛选与可视化。
+      </p>
+      <div class="hero-byline">
+        编辑 · <b>陈雨航</b><br/>
+        数据源 · <b>top-rank-tracker</b><br/>
+        最近抓取 · <b id="capAt">--</b>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="label">Platforms</div><div class="num" id="kpi-platform">--</div><div class="unit">在监测平台/榜单数</div></div>
+      <div class="kpi"><div class="label">Hot Items</div><div class="num" id="kpi-items">--</div><div class="unit">当日上榜词条总数</div></div>
+      <div class="kpi"><div class="label">Resonance</div><div class="num" id="kpi-shared">--</div><div class="unit">跨平台共振词数量</div></div>
+      <div class="kpi"><div class="label">Newcomers</div><div class="num" id="kpi-new">--</div><div class="unit">今日新晋商品/品牌(电商)</div></div>
+    </div>
+  </header>
+
+  <!-- ===== SECTION 01 : HOT SEARCH ===== -->
+  <section class="section">
+    <div class="section-head">
+      <div class="l">
+        <div class="section-num">01</div>
+        <h2>热搜榜 · 按品类筛选<small>Hot Search × 8 Categories</small></h2>
+      </div>
+    </div>
+    <div class="cat-tabs" id="hotTabs"></div>
+    <div class="insight" id="insightHot">
+      <div class="tag"><div class="t1">Insight</div><div class="t2">🔥</div></div>
+      <div class="body"><div class="lead">加载中…</div></div>
+    </div>
+    <div class="grid" id="hotGrid"></div>
+  </section>
+
+  <!-- ===== SECTION 02 : SHOPPING ===== -->
+  <section class="section">
+    <div class="section-head">
+      <div class="l">
+        <div class="section-num">02</div>
+        <h2>热销榜 · 按品类筛选<small>E-commerce × 8 Categories</small></h2>
+      </div>
+    </div>
+    <div class="cat-tabs" id="shopTabs"></div>
+    <div class="insight" id="insightShop">
+      <div class="tag"><div class="t1">Insight</div><div class="t2">🛒</div></div>
+      <div class="body"><div class="lead">加载中…</div></div>
+    </div>
+    <div class="grid" id="shopGrid"></div>
+  </section>
+
+  <!-- ===== SECTION 03 : TREND ANALYSIS ===== -->
+  <section class="section">
+    <div class="section-head">
+      <div class="l">
+        <div class="section-num">03</div>
+        <h2>趋势分析<small>Trend · cross-day & cross-platform</small></h2>
+      </div>
+    </div>
+
+    <div class="insight" id="insightTrend">
+      <div class="tag"><div class="t1">Brief</div><div class="t2">📈</div></div>
+      <div class="body"><div class="lead">加载中…</div></div>
+    </div>
+
+    <div class="trend-grid">
+      <div class="pcard">
+        <div class="pcard-head"><h3>各平台日热度走势</h3><div class="meta">近 N 天 · 单位:万</div></div>
+        <div id="chartLine" class="chart lg"></div>
+      </div>
+      <div class="pcard">
+        <div class="pcard-head"><h3>跨平台共振 TOP10</h3><div class="meta">同日 ≥2 平台同时出现</div></div>
+        <div class="kv-list" id="resonanceList"></div>
+      </div>
+    </div>
+
+    <div class="trend-grid two">
+      <div class="pcard"><div class="pcard-head"><h3>🚀 今日新晋商品/品牌</h3><div class="meta">仅电商榜 · 昨日未上榜</div></div><div class="kv-list" id="newList"></div></div>
+      <div class="pcard"><div class="pcard-head"><h3>💨 今日退榜商品/品牌</h3><div class="meta">仅电商榜 · 昨日有,今日无</div></div><div class="kv-list" id="goneList"></div></div>
+    </div>
+
+    <div class="trend-grid full">
+      <div class="pcard"><div class="pcard-head"><h3>🏆 今日热度 TOP15(全平台合并去重)</h3><div class="meta">数值化排序</div></div>
+        <div id="chartBar" class="chart lg"></div>
+      </div>
+    </div>
+
+    <!-- ===== DUAL WORD CLOUDS ===== -->
+    <div style="margin-top:38px;padding-bottom:8px;border-bottom:1px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px">
+      <div>
+        <h3 style="font-family:Fraunces;font-style:italic;font-weight:800;font-size:30px;line-height:1">☁️ 双词云 · 话题 vs 商品</h3>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-top:6px">Topics × Products · click categories below to filter both clouds</div>
+      </div>
+    </div>
+    <div class="cat-tabs" id="cloudTabs" style="margin-top:18px"></div>
+    <div class="cloud-row">
+      <div class="cloud-cell">
+        <div class="badge">话题词 · Topics</div>
+        <div class="pcard-head" style="border:none;padding:0;margin-bottom:10px">
+          <h3 style="font-family:Fraunces;font-style:italic;font-weight:800;font-size:22px">💬 热搜话题词云</h3>
+          <div class="meta" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">微博/百度/夸克/搜狗/360</div>
+        </div>
+        <div id="cloudTopics" class="chart xl"></div>
+      </div>
+      <div class="cloud-cell">
+        <div class="badge green">商品词 · Products</div>
+        <div class="pcard-head" style="border:none;padding:0;margin-bottom:10px">
+          <h3 style="font-family:Fraunces;font-style:italic;font-weight:800;font-size:22px">🏷️ 电商商品/品牌词云</h3>
+          <div class="meta" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">淘宝天猫/京东/快手/今日热卖</div>
+        </div>
+        <div id="cloudProducts" class="chart xl"></div>
+      </div>
+    </div>
+
+    <div class="editorial">
+      <h3><small>Editorial · 编辑手记</small>今日观察</h3>
+      <div class="cols">
+        <p id="narr1"><span class="dropcap">T</span>加载中...</p>
+        <p id="narr2">加载中...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 04 : MARKETING PLAYBOOK ===== -->
+  <section class="section">
+    <div class="section-head">
+      <div class="l">
+        <div class="section-num">04</div>
+        <h2>营销建议<small>Marketing Playbook × 8 Categories</small></h2>
+      </div>
+    </div>
+    <div class="insight" id="insightMkt">
+      <div class="tag"><div class="t1">Strategy</div><div class="t2">🎯</div></div>
+      <div class="body"><div class="lead">基于今日全网热搜话题与电商爆款 SKU 的交叉信号,为 <b>八大品类</b> 输出可落地的营销 playbook ——每个品类按 <em>4-5 个二级品类 × 营销场景 × 话题钩子 × 投放策略</em> 拆解。<b>切换下方品类 tab 查看对应行业建议</b>。</div><ul><li>话题钩子来自当日真实热搜词</li><li>策略颗粒度到「内容形式 + 投放阵地 + 创意角度」</li><li>每日随热点自动刷新</li></ul></div>
+    </div>
+    <div class="cat-tabs" id="mktTabs"></div>
+    <div id="mktContent"></div>
+  </section>
+
+  <footer>
+    <span>AI热点捕手 · Daily Pulse</span>
+    <span>数据 · <a href="https://github.com/chenyuhang77m-eng/top-rank-tracker" target="_blank">top-rank-tracker</a></span>
+    <span>每天 10:00 自动归档 · 静态托管</span>
+  </footer>
+</div>
+
+<script>
+/* ============ DATA SOURCES ============ */
+const REPO_BASE = 'https://raw.githubusercontent.com/chenyuhang77m-eng/top-rank-tracker/main';
+const URL_INDEX  = REPO_BASE + '/data/index.json';
+const dayUrl = (d)=> REPO_BASE + `/data/${d}.json`;
+
+/* ============ 8 大品类(用户体系) ============ */
+/*  3C数码 / 家居家装 / 家用电器 / 母婴亲子 / 食品饮料 / 美妆护肤 / 服饰穿戴 / 平台教育  */
+const CATEGORIES = [
+  {key:'ALL',  name:'全部',     ico:'✨'},
+  {key:'C3',   name:'3C数码',  ico:'📱', re:/手机|iPhone|苹果|华为|小米|OPPO|vivo|荣耀|平板|iPad|电脑|笔记本|相机|大疆|耳机|蓝牙|充电|数码|芯片|GPU|英伟达|AI|大模型|DeepSeek|文心|GPT|算力|算法|科技|发布会|HarmonyOS|鸿蒙|麒麟|U盘|硬盘|路由器|智能设备|穿戴|手表|VR|智能家居/i},
+  {key:'HOME', name:'家居家装', ico:'🏠', re:/家居|家纺|家具|沙发|床垫|窗帘|地毯|装修|家装|建材|涂料|墙纸|瓷砖|厨房|卫浴|马桶|花洒|洗衣|洗发|沐浴|纸巾|湿巾|凝珠|清洁|拖把|垃圾袋|抽纸|洗衣液|消毒|个护|护理|卫生巾|花|植物|收纳|插排|插座/},
+  {key:'APPL', name:'家用电器', ico:'💡', re:/家电|空调|冰箱|洗衣机|电视|风扇|微波|烤箱|净化器|加湿器|电饭煲|吸尘器|扫地机|料理机|电热|热水器|电磁炉|油烟机|奥克斯|美的|格力|海尔|TCL|飞利浦|戴森/},
+  {key:'BABY', name:'母婴亲子', ico:'👶', re:/母婴|宝宝|婴儿|尿不湿|尿裤|奶粉|奶瓶|奶嘴|童装|童鞋|儿童|玩具|乐器|益智|绘本|图书|文具|礼品|学习机|早教|学步|安抚|辅食|月子/},
+  {key:'FOOD', name:'食品饮料', ico:'🍔', re:/食品|零食|饼干|薯片|粽|月饼|奶茶|咖啡|牛奶|酸奶|啤酒|白酒|红酒|饮料|果汁|益生菌|坚果|巧克力|火锅|方便面|速食|生鲜|水果|蔬菜|肉|蛋|海鲜|皮皮虾|榴莲|车厘子|西瓜/},
+  {key:'BEAU', name:'美妆护肤', ico:'💄', re:/面膜|口红|粉底|精华|防晒霜|护肤|美妆|彩妆|香水|美瞳|眼影|腮红|护发|染发|脱毛|妆容|妆造|睫毛|眉笔|遮瑕|气垫|定妆|卸妆|洗面|爽肤水|乳液|身体乳|唇釉|韩束|完美日记|花西子|欧莱雅|兰蔻|雅诗兰黛/},
+  {key:'CLOT', name:'服饰穿戴', ico:'👗', re:/T恤|连衣裙|裤|衬衫|外套|风衣|羽绒|羊绒|针织|毛衣|卫衣|背心|短袖|长袖|内衣|内裤|文胸|袜|鞋|靴|帽|围巾|手套|箱包|钱包|双肩包|手提包|眼镜|墨镜|手表|腕表|穿搭|服饰|时装|tutu|冰丝|防晒衣|防晒裤|冲锋衣|polo|短裙|长裙|户外|运动鞋|跑鞋/i},
+  {key:'EDU',  name:'平台教育', ico:'🎓', re:/教育|培训|学习|课程|网课|考研|考公|考证|考试|高考|中考|大学|学校|留学|英语|考级|本地生活|酒店|旅游|景区|景点|出行|机票|二手|回收|租|外卖|团购|团餐/},
+];
+const CAT_KEYS = CATEGORIES.map(c=>c.key);
+const CAT_BY_KEY = Object.fromEntries(CATEGORIES.map(c=>[c.key,c]));
+
+function categorize(title){
+  for(const c of CATEGORIES){
+    if(c.key==='ALL') continue;
+    if(c.re.test(title)) return c.key;
+  }
+  return null;  // 未归类
+}
+
+/* ============ HELPERS ============ */
+function parseMetric(s){
+  if(!s) return 0;
+  const t = String(s).replace(/[, ]/g,'');
+  const m = t.match(/([\d.]+)\s*(亿|万|w|W|k|K)?/);
+  if(!m) return 0;
+  const n = parseFloat(m[1]); const u = m[2]||'';
+  if(u==='亿') return n*1e8;
+  if(u==='万'||u==='w'||u==='W') return n*1e4;
+  if(u==='k'||u==='K') return n*1e3;
+  return n;
+}
+function fmtBig(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed(0)+'万':v?Math.round(v):'-';}
+function tagOf(title, m){
+  const t=title||'',mr=m||'';
+  if(/AI|大模型|DeepSeek|英伟达|华为|苹果|iPhone|科技|发布会|文心|算法/.test(t)) return {cls:'tech',text:'科技'};
+  if(/爆/.test(mr)||parseMetric(mr)>=1e6) return {cls:'hot',text:'爆'};
+  if(/新|首次|刚刚|发布|官宣|上线/.test(t)) return {cls:'new',text:'新'};
+  if(parseMetric(mr)>=3e5) return {cls:'buzz',text:'热议'};
+  return null;
+}
+function escHtml(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function ago(iso){
+  if(!iso) return '--';
+  try{const t=new Date(iso),d=(Date.now()-t.getTime())/1000;
+    if(d<60)return'刚刚';if(d<3600)return Math.floor(d/60)+' 分钟前';
+    if(d<86400)return Math.floor(d/3600)+' 小时前';return Math.floor(d/86400)+' 天前';
+  }catch(e){return'--'}
+}
+async function getJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(url+' '+r.status);return r.json();}
+
+/* ============ STATE ============ */
+const STATE = {
+  latest:null, snapshots:[],
+  hotCat:'ALL', shopCat:'ALL', cloudCat:'ALL', mktCat:'C3',
+  hotLists:[], shopLists:[],
+};
+
+/* ============ CATEGORY TAB BAR ============ */
+function renderCatTabs(containerId, currentKey, counts, onChange){
+  const c = document.getElementById(containerId);
+  c.innerHTML = CATEGORIES.map(cat=>{
+    const cnt = counts?.[cat.key] ?? '';
+    const cntHtml = (cnt!==''&&cnt!=null)?`<span class="cnt">${cnt}</span>`:'';
+    return `<div class="tab ${cat.key===currentKey?'active':''}" data-key="${cat.key}">
+      <span class="ico">${cat.ico}</span><span>${cat.name}</span>${cntHtml}
+    </div>`;
+  }).join('');
+  c.onclick = e=>{
+    const t = e.target.closest('.tab'); if(!t) return;
+    [...c.children].forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    onChange(t.dataset.key);
+  };
+}
+
+/* ============ FILTER LISTS BY CATEGORY ============ */
+function filterListsByCat(lists, catKey){
+  if(catKey==='ALL') return lists.map(l=>({...l, items:l.items.slice(0,10)}));
+  return lists.map(l=>{
+    const items = l.items.filter(it=>categorize(it.title)===catKey).slice(0,10);
+    return {...l, items, _filteredCount:items.length};
+  });
+}
+
+/* ============ COUNT ITEMS PER CATEGORY ============ */
+function countByCategory(lists){
+  const counts = {ALL:0};
+  CATEGORIES.forEach(c=>{if(c.key!=='ALL') counts[c.key]=0;});
+  lists.forEach(l=>l.items.forEach(it=>{
+    counts.ALL++;
+    const c = categorize(it.title);
+    if(c) counts[c]++;
+  }));
+  return counts;
+}
+
+/* ============ RENDER RANK PANEL ============ */
+function panelHTML(list, catKey){
+  const items = list.items;
+  const inner = items.length? items.map(it=>{
+    const tag = tagOf(it.title, it.metric);
+    const tagHtml = tag ? `<span class="tag ${tag.cls}">${tag.text}</span>` : '';
+    const numCls = it.rank===1?'top1':it.rank===2?'top2':it.rank===3?'top3':'';
+    const link = it.url ? `<a class="rank-title" href="${escHtml(it.url)}" target="_blank" rel="noopener">${escHtml(it.title)}</a>` : `<span class="rank-title">${escHtml(it.title)}</span>`;
+    return `<div class="rank-item ${numCls}">
+      <div class="rank-num">${it.rank}</div>${link}
+      <div class="rank-meta">${tagHtml}<span class="metric">${escHtml((it.metric||'').trim())}</span></div>
+    </div>`;
+  }).join('') : `<div class="rank-empty">— 该榜单暂无「${escHtml(CAT_BY_KEY[catKey].name)}」相关 —</div>`;
+  const subTag = catKey==='ALL'?'TOP 10':`${CAT_BY_KEY[catKey].name} · ${items.length} 条`;
+  return `<div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">${escHtml(list.sourceName)}<small>${escHtml(list.listName)}</small></div>
+      <div class="panel-source">${subTag}<br/>/${list.itemCount}</div>
+    </div>
+    <div class="rank-list">${inner}</div>
+  </div>`;
+}
+
+function renderHot(){
+  const filtered = filterListsByCat(STATE.hotLists, STATE.hotCat);
+  document.getElementById('hotGrid').innerHTML = filtered.map(l=>panelHTML(l, STATE.hotCat)).join('');
+  fillInsight('insightHot', buildHotInsight(STATE.hotLists, STATE.hotCat));
+}
+function renderShop(){
+  const filtered = filterListsByCat(STATE.shopLists, STATE.shopCat);
+  document.getElementById('shopGrid').innerHTML = filtered.map(l=>panelHTML(l, STATE.shopCat)).join('');
+  fillInsight('insightShop', buildShopInsight(STATE.shopLists, STATE.shopCat));
+}
+
+/* ============ INSIGHTS (动态按品类) ============ */
+function topItemsByCat(lists, catKey, n=8){
+  const arr = [];
+  lists.forEach(l=>l.items.forEach(it=>{
+    if(catKey!=='ALL' && categorize(it.title)!==catKey) return;
+    arr.push({src:l.sourceName, ...it, val:parseMetric(it.metric)});
+  }));
+  arr.sort((a,b)=>b.val-a.val);
+  return arr.slice(0,n);
+}
+function buildHotInsight(hotLists, catKey){
+  const items = topItemsByCat(hotLists, catKey, 50);
+  const total = items.length;
+  if(!total) return {lead:`今日五大热搜榜中,<em>「${escHtml(CAT_BY_KEY[catKey].name)}」</em>品类暂无明显话题——可能该品类<em>不是今日舆论焦点</em>,适合做<b>错峰内容投放</b>。`, items:[]};
+  const top = items[0];
+  const platforms = [...new Set(items.map(x=>x.src))];
+  let lead = catKey==='ALL'
+    ? `今日五大热搜榜共 <b>${total}</b> 条词条,单条最高热度 <em>「${escHtml(top.title)}」</em>(${escHtml(top.metric)},来自${escHtml(top.src)})。`
+    : `「${CAT_BY_KEY[catKey].name}」品类今日上榜 <b>${total}</b> 条话题,覆盖 <b>${platforms.length}</b> 个平台,最热为 <em>「${escHtml(top.title)}」</em>(${escHtml(top.metric)})。`;
+  const tech = items.filter(x=>/AI|大模型|芯片|GPT|DeepSeek|英伟达|科技|发布/.test(x.title)).length;
+  const social = items.filter(x=>/逝世|事件|曝光|被|致|警方|通报/.test(x.title)).length;
+  const culture = items.filter(x=>/明星|综艺|演员|歌手|爱豆|剧|电影|演唱会|综艺/.test(x.title)).length;
+  const tones = [];
+  if(tech>=2) tones.push(`科技/AI 议题 ${tech} 条`);
+  if(social>=2) tones.push(`社会事件 ${social} 条`);
+  if(culture>=2) tones.push(`娱乐文化 ${culture} 条`);
+  if(tones.length) lead += `结构上 ${tones.join('、')},`;
+  lead += catKey==='ALL'?`整体反映当日全网注意力分布。`:`品牌可结合该品类话题做<em>借势内容</em>。`;
+  return {lead, items: items.slice(0,4).map(x=>`${escHtml(x.src)}:${escHtml(x.title)}`)};
+}
+function buildShopInsight(shopLists, catKey){
+  const items = topItemsByCat(shopLists, catKey, 50);
+  const total = items.length;
+  if(!total) return {lead:`今日四大电商榜中,<em>「${escHtml(CAT_BY_KEY[catKey].name)}」</em>品类暂无 SKU 上榜——该品类<em>不是当下电商爆款赛道</em>,可重点观察后续天数变化。`, items:[]};
+  const top = items[0];
+  let lead = catKey==='ALL'
+    ? `电商端四大榜单共 <b>${total}</b> 条 SKU。`
+    : `「${CAT_BY_KEY[catKey].name}」品类今日合计上榜 <b>${total}</b> 条 SKU,代表性单品 <em>「${escHtml(top.title)}」</em>。`;
+  // 提取品牌词频
+  const brandRe = /^([一-龥A-Za-z0-9]{2,8})/;
+  const brandCnt = new Map();
+  items.forEach(it=>{
+    const m = it.title.match(brandRe);
+    if(m){const b=m[1].replace(/^(新款|正品|官方|旗舰|爆款|热销)/,''); if(b.length>=2) brandCnt.set(b,(brandCnt.get(b)||0)+1);}
+  });
+  const topBrands = [...brandCnt.entries()].sort((a,b)=>b[1]-a[1]).slice(0,4);
+  if(topBrands.length){
+    lead += `头部品牌:<b>${topBrands.map(([b,c])=>b+`(${c})`).join('、')}</b>。`;
+  }
+  if(catKey==='ALL'){
+    lead += `电商端的 SKU 密度可作为<em>真实购买力</em>的近似信号。`;
+  }else{
+    lead += `结合「${CAT_BY_KEY[catKey].name}」品类的热搜话题对照,能识别 <em>话题→转化</em> 的衔接机会。`;
+  }
+  return {lead, items: items.slice(0,4).map(x=>`${escHtml(x.src)}:${escHtml(x.title).slice(0,28)}`)};
+}
+function fillInsight(elId, ins){
+  const el = document.getElementById(elId);
+  el.querySelector('.body').innerHTML = `<div class="lead">${ins.lead}</div>` + (ins.items?.length?`<ul>${ins.items.map(x=>`<li>${x}</li>`).join('')}</ul>`:'');
+}
+
+/* ============ TREND : RESONANCE / NEW / GONE / BAR / LINE ============ */
+function buildResonance(latest){
+  const m = new Map();
+  latest.lists.forEach(l=>{
+    l.items.slice(0,15).forEach(it=>{
+      const k = it.title.trim(); if(!k) return;
+      if(!m.has(k)) m.set(k,{count:0,sources:new Set(),metric:0});
+      const o = m.get(k); o.sources.add(l.sourceName); o.count = o.sources.size;
+      o.metric = Math.max(o.metric, parseMetric(it.metric));
+    });
+  });
+  return [...m.entries()].filter(([,v])=>v.count>=2).sort((a,b)=>b[1].count-a[1].count||b[1].metric-a[1].metric).slice(0,10);
+}
+function renderResonance(data){
+  document.getElementById('kpi-shared').textContent = data.length;
+  const el = document.getElementById('resonanceList');
+  if(!data.length){el.innerHTML='<div class="kv"><span class="idx">—</span><span class="l">暂无跨平台共振词</span><span class="r"></span></div>';return;}
+  el.innerHTML = data.map(([k,v],i)=>`<div class="kv"><span class="idx">${String(i+1).padStart(2,'0')}</span><span class="l">${escHtml(k)}</span><span class="r">${v.count}平台·${fmtBig(v.metric)}</span></div>`).join('');
+}
+function renderNewGone(today, yesterday){
+  // 商品维度:仅取电商榜单(category===shopping),用品牌+卖点 token 作为商品标识(粒度更细)
+  const extractProducts = (snap)=>{
+    const m = new Map();  // brand/selling token -> max metric (作为热度)
+    (snap?.lists||[]).filter(l=>l.category==='shopping').forEach(l=>{
+      l.items.forEach(it=>{
+        const v = parseMetric(it.metric) || 1;
+        // 用品牌词典抽取(品牌优先,无品牌则用卖点)
+        const brands = dictExtract(it.title, PRODUCT_BRANDS.sort((a,b)=>b.length-a.length));
+        const sellings = dictExtract(it.title, PRODUCT_SELLING.sort((a,b)=>b.length-a.length));
+        const tokens = brands.length ? brands : sellings.slice(0,2);
+        tokens.forEach(t=>{
+          if(!m.has(t)||v>m.get(t).value) m.set(t,{value:v, sample:it.title, type: PRODUCT_BRANDS.includes(t)?'brand':'selling'});
+        });
+      });
+    });
+    return m;
+  };
+  const todayMap = extractProducts(today);
+  const yMap = extractProducts(yesterday);
+  const todaySet = new Set(todayMap.keys());
+  const ySet = new Set(yMap.keys());
+
+  const newOnes = [...todaySet].filter(x=>!ySet.has(x));
+  const gone   = [...ySet].filter(x=>!todaySet.has(x));
+
+  // KPI: 用商品新晋数
+  document.getElementById('kpi-new').textContent = newOnes.length;
+
+  const fmt = (token, info)=>{
+    const tag = info.type==='brand'?'品牌':'卖点';
+    return `${token} <span style="color:#1a4d3f;font-size:10px;font-family:JetBrains Mono">[${tag}]</span>`;
+  };
+
+  const newSorted  = newOnes.map(k=>[k, todayMap.get(k)]).sort((a,b)=>b[1].value-a[1].value).slice(0,10);
+  const goneSorted = gone.map(k=>[k, yMap.get(k)]).sort((a,b)=>b[1].value-a[1].value).slice(0,10);
+
+  document.getElementById('newList').innerHTML = newSorted.length
+    ? newSorted.map(([k,info],i)=>`<div class="kv"><span class="idx">${String(i+1).padStart(2,'0')}</span><span class="l" title="${escHtml(info.sample)}">${fmt(escHtml(k),info)}</span><span class="r">${fmtBig(info.value)}</span></div>`).join('')
+    : '<div class="kv"><span class="idx">—</span><span class="l">首日数据/无对比</span><span class="r"></span></div>';
+  document.getElementById('goneList').innerHTML = goneSorted.length
+    ? goneSorted.map(([k,info],i)=>`<div class="kv"><span class="idx">${String(i+1).padStart(2,'0')}</span><span class="l" title="${escHtml(info.sample)}">${fmt(escHtml(k),info)}</span><span class="r">昨${fmtBig(info.value)}</span></div>`).join('')
+    : '<div class="kv"><span class="idx">—</span><span class="l">无退榜商品</span><span class="r"></span></div>';
+
+  return {newCount:newOnes.length, goneCount:gone.length};
+}
+function renderTopBar(latest){
+  const arr=[];latest.lists.forEach(l=>l.items.forEach(it=>arr.push({title:it.title,metric:parseMetric(it.metric),src:l.sourceName})));
+  const m=new Map();arr.forEach(x=>{const k=x.title;if(!m.has(k)||m.get(k).metric<x.metric)m.set(k,x);});
+  const top=[...m.values()].filter(x=>x.metric>0).sort((a,b)=>b.metric-a.metric).slice(0,15).reverse();
+  const ch=echarts.init(document.getElementById('chartBar'),null,{renderer:'canvas'});
+  ch.setOption({
+    grid:{left:130,right:60,top:10,bottom:30},
+    tooltip:{backgroundColor:'#0d0c0a',borderColor:'#0d0c0a',textStyle:{color:'#f4ede1',fontFamily:'Noto Serif SC'}},
+    xAxis:{type:'value',axisLabel:{color:'#605747',fontFamily:'JetBrains Mono',fontSize:10},splitLine:{lineStyle:{color:'rgba(13,12,10,.08)'}}},
+    yAxis:{type:'category',data:top.map(x=>x.title.length>16?x.title.slice(0,16)+'…':x.title),axisLabel:{color:'#0d0c0a',fontSize:12,fontFamily:'Noto Serif SC'},axisLine:{lineStyle:{color:'#0d0c0a'}},axisTick:{show:false}},
+    series:[{type:'bar',data:top.map(x=>x.metric),barWidth:14,
+      itemStyle:{color:new echarts.graphic.LinearGradient(0,0,1,0,[{offset:0,color:'#c8331f'},{offset:1,color:'#d99c2b'}])},
+      label:{show:true,position:'right',color:'#0d0c0a',fontFamily:'JetBrains Mono',fontWeight:600,fontSize:11,formatter:p=>fmtBig(p.value)}}]
+  });
+  window.addEventListener('resize',()=>ch.resize());
+}
+function renderLine(snaps){
+  const dates=snaps.map(s=>s.date);
+  const sources=new Set();snaps.forEach(s=>(s.snap?.lists||[]).forEach(l=>sources.add(l.sourceName)));
+  const palette=['#c8331f','#1a4d3f','#d99c2b','#1f5fbd','#7d3a8c','#3a8c4a','#b86b1f','#444'];
+  const series=[...sources].map((src,i)=>({
+    name:src,type:'line',smooth:true,symbol:'circle',symbolSize:7,
+    lineStyle:{width:2.2,color:palette[i%palette.length]},
+    itemStyle:{color:palette[i%palette.length]},
+    areaStyle:{opacity:.05,color:palette[i%palette.length]},
+    data:snaps.map(s=>{const ls=(s.snap?.lists||[]).filter(l=>l.sourceName===src);let t=0,n=0;ls.forEach(l=>l.items.forEach(it=>{const v=parseMetric(it.metric);if(v>0){t+=v;n++;}}));return n?Math.round(t/1e4):0;})
+  }));
+  const ch=echarts.init(document.getElementById('chartLine'),null,{renderer:'canvas'});
+  ch.setOption({
+    legend:{textStyle:{color:'#0d0c0a',fontFamily:'JetBrains Mono',fontSize:10},top:0,type:'scroll',itemGap:14,icon:'roundRect',itemWidth:10,itemHeight:6},
+    grid:{left:50,right:24,top:48,bottom:30},
+    tooltip:{trigger:'axis',backgroundColor:'#0d0c0a',borderColor:'#0d0c0a',textStyle:{color:'#f4ede1',fontFamily:'Noto Serif SC'}},
+    xAxis:{type:'category',data:dates,axisLabel:{color:'#605747',fontFamily:'JetBrains Mono',fontSize:10},axisLine:{lineStyle:{color:'#0d0c0a'}}},
+    yAxis:{type:'value',name:'万',nameTextStyle:{color:'#605747',fontFamily:'JetBrains Mono',fontSize:10},axisLabel:{color:'#605747',fontFamily:'JetBrains Mono',fontSize:10},splitLine:{lineStyle:{color:'rgba(13,12,10,.08)'}}},
+    series
+  });
+  window.addEventListener('resize',()=>ch.resize());
+}
+
+/* ============ DUAL WORD CLOUDS (词典匹配 · 语义完整) ============ */
+
+/* === 话题词典:按 8 大品类组织,每类 30-60 个 — 整词整词出现在词云里 === */
+const TOPIC_DICT = [
+  // ========== 3C数码 / AI ==========
+  'DeepSeek','文心大模型','文心5.1','GPT','GPT5','ChatGPT','Claude','Gemini','Sora','可灵',
+  'iPhone','iPhone17','iPhone17Pro','iPhone16','华为Mate70','Mate70','华为Pura80','小米15','小米SU7','小米YU7',
+  'OPPO Find X8','vivo X200','荣耀Magic7','三星S25','三星折叠屏','MacBook','iPad','AirPods','Apple Watch','Vision Pro',
+  '大疆','大疆Mini5','大疆Action','GoPro','英伟达','黄仁勋','RTX5090','英特尔','AMD',
+  '鸿蒙','HarmonyOS','麒麟芯片','算力','大模型','AI手机','AI PC','AI眼镜','AI耳机','AI Agent','具身智能','人形机器人','机器人',
+  'AI换脸','AI诈骗','AI客服','车企锁电','锁电','智驾','L3自动驾驶','华为问界','智能座舱','激光雷达',
+  '微信重大更新','微信电脑版','微信小绿书','支付宝',
+
+  // ========== 家居家装 ==========
+  '宜家','无印良品','北欧风','新中式家居','极简主义','断舍离','收纳神器','悬浮床','智能床',
+  '装修翻车','整装套餐','全屋定制','开放式厨房','岛台厨房','日式榻榻米','飘窗改造','阳台花园','屋顶花园',
+  '甲醛超标','除甲醛','空气检测','静音门窗','隔音棉','瓷砖美缝','防水涂料','地暖','新风系统','中央空调',
+  '智能马桶','即热花洒','大花洒','卫浴升级','换季大扫除','清洁神器','洗地机','蒸汽拖把',
+  '居家氛围感','治愈系家居','复古软装','手工地毯','法式风情',
+
+  // ========== 家用电器 ==========
+  '空调一级能效','变频空调','省电空调','冰箱母婴模式','法式四门冰箱','洗烘一体','滚筒洗衣机','分区洗',
+  '扫地机器人','石头扫地机','追觅扫地机','科沃斯','洗地机','戴森吹风机','戴森空气净化器','戴森V15',
+  '电饭煲新品','破壁机','空气炸锅','蒸烤一体机','嵌入式厨电','洗碗机','烟灶套装',
+  '电视护眼','激光电视','投影仪','极米','当贝','坚果','OLED电视','MiniLED',
+  '海尔','美的','格力','TCL','飞利浦','西门子','松下','奥克斯','九阳','苏泊尔','老板电器','方太',
+
+  // ========== 母婴亲子 ==========
+  '飞鹤奶粉','金领冠','A2奶粉','可瑞康','嘉宝辅食','益生菌奶粉','DHA奶粉','无添加奶粉','羊奶粉','有机奶粉',
+  '尿不湿测评','花王尿不湿','大王尿不湿','好奇皇家','帮宝适','拉拉裤','纸尿裤推荐',
+  '童装新品','巴拉巴拉','安奈儿','母女装','亲子装','母亲节穿搭','儿童早教','学步鞋','学习机',
+  '科大讯飞学习机','点读笔','迪士尼绘本','乐高','巧虎','宝宝玩具','积木',
+  '辅食推荐','米粉','磨牙棒','安抚奶嘴','婴儿推车','成长奶粉','月子餐','产后修复',
+  '儿童用药安全','疫苗接种','婴幼儿过敏','婴儿湿疹','母婴亲子',
+
+  // ========== 食品饮料 ==========
+  '茅台','五粮液','酱香拿铁','瑞幸','星巴克','喜茶','奈雪','蜜雪冰城','库迪','霸王茶姬',
+  '元气森林','可口可乐','百事','农夫山泉','怡宝','东方树叶','王老吉','加多宝',
+  '螺蛳粉','自热火锅','方便面','拉面说','三只松鼠','百草味','良品铺子','卫龙辣条','卫龙魔芋爽',
+  '0糖0卡','低脂酸奶','希腊酸奶','简爱酸奶','卡士','光明','蒙牛','伊利','认养一头牛',
+  '榴莲','车厘子','西瓜','阳光玫瑰','桂圆','大闸蟹','皮皮虾','烤肉','韩式炸鸡','日式拉面',
+  '粽子','鲜肉粽','豆沙粽','五芳斋','月饼','中秋礼盒','端午节','春节年货',
+  '免费鸡蛋诈骗','315曝光','食品安全','315维权',
+
+  // ========== 美妆护肤 ==========
+  '珀莱雅','韩束','可复美','薇诺娜','HBN','花西子','完美日记','彩棠','TIMAGE','毛戈平','PMPM','逐本',
+  '欧莱雅','兰蔻','雅诗兰黛','Olay','SK-II','赫莲娜','海蓝之谜','资生堂','CPB','娇兰','Dior','YSL',
+  'Fenty Beauty','3CE','MAC','Charlotte Tilbury','NARS','植村秀','MAC魅可',
+  '抗老精华','烟酰胺','视黄醇','玻尿酸','多肽','胶原蛋白','维C精华','377美白',
+  '早C晚A','水乳套装','面膜推荐','油皮护肤','干皮拯救','敏感肌护肤','脆皮屏障',
+  '千里江山图妆造','撕漫脸','紫发撕漫脸','维C定妆','妆造','哑光口红','显白色号','气垫BB',
+  '防晒霜推荐','身体防晒','物理防晒','蜜粉饼','遮瑕推荐','睫毛膏','美瞳推荐',
+
+  // ========== 服饰穿戴 ==========
+  '优衣库','UNIQLO','UR','MOCO','Zara','H&M','ZARA','蕉内','蕉下','内外NEIWAI','ubras','奶糖派',
+  '波司登','加拿大鹅','Moncler','北面','始祖鸟','蕉下防晒衣','防晒衣推荐','防晒口罩','UPF50+',
+  '冰丝裤','冰丝凉感','tutu裙','防晒裤','冲锋衣','凉感T恤','无尺码内衣','显瘦穿搭','梨形身材穿搭',
+  '运动鞋推荐','跑鞋测评','安踏','李宁','耐克Nike','阿迪达斯','Adidas','匡威','彪马','ASICS','New Balance','Hoka','On昂跑',
+  '中式美学','国风穿搭','汉服','马面裙','宋制汉服','新中式','新中式穿搭',
+  '通勤穿搭','约会穿搭','母亲节穿搭','母女装','亲子装','穿搭模板','穿搭博主',
+  '腕表新品','智能手表','华为手表','Apple Watch','卡西欧',
+
+  // ========== 平台教育 / 本地生活 ==========
+  '学而思','猿辅导','作业帮','有道','新东方','东方甄选','俞敏洪','网课','一对一辅导','拍照搜题',
+  '考研倒计时','考公上岸','公务员考试','教师资格证','一建二建','雅思托福','英语四六级','高考志愿',
+  '美团','大众点评','饿了么','美团外卖','拼好饭','团购','到店餐饮','本地生活',
+  '携程','飞猪','去哪儿','马蜂窝','酒+景套餐','机票直降','火车票抢票','春运抢票','五一出游','国庆出游',
+  '闲鱼','转转','二手回收','以旧换新','京东以旧换新','家电以旧换新','汽车以旧换新',
+  '抖音电商','快手电商','小红书种草','视频号','直播带货','千川投放','达人探店',
+  '618','双十一','38大促','99划算节','双12','年货节',
+];
+
+/* === 商品词典:品牌词 — 按 8 大品类组织,每类 30-60 个 === */
+const PRODUCT_BRANDS = [
+  // ========== 3C数码 ==========
+  'iPhone','iPhone17','iPhone16','华为','华为Mate','华为Pura','小米','小米15','小米SU7','OPPO','vivo','iQOO','荣耀','realme','魅族','中兴','一加','OnePlus','三星','Samsung','苹果','Apple',
+  'MacBook','iPad','AirPods','Apple Watch','Vision Pro','戴尔','Dell','联想','Lenovo','ThinkPad','惠普','HP','华硕','ASUS','ROG','宏碁','微星','机械革命','雷神','外星人','Alienware',
+  '索尼','Sony','尼康','Nikon','佳能','Canon','富士','Fujifilm','大疆','DJI','GoPro','影石','Insta360','闪魔','谱硕','腹灵','黑爵',
+  '英伟达','Nvidia','英特尔','Intel','AMD','希捷','西部数据','金士顿','三星固态',
+
+  // ========== 家居家装 ==========
+  '林氏木业','林氏家居','全友家居','顾家家居','喜临门','慕思','梦百合','穗宝','金可儿','席梦思','松堡王国','源氏木语','华日家居','曲美',
+  '奥普','箭牌','九牧','摩恩','TOTO','科勒','法恩莎','恒洁','安华','汉斯格雅','吉博力','大公鸡管家',
+  '宜家','IKEA','无印良品','MUJI','名创优品','网易严选','京造','小米有品',
+  '立邦','多乐士','三棵树','嘉宝莉','华润漆','圣象地板','德尔地板','大自然地板','马可波罗瓷砖','东鹏瓷砖','诺贝尔瓷砖','蒙娜丽莎',
+  '佳帮手','太力','百露','禧天龙','茶花','爱丽思','IRIS',
+
+  // ========== 家用电器 ==========
+  '海尔','美的','格力','TCL','飞利浦','Philips','戴森','Dyson','九阳','苏泊尔','老板电器','方太','西门子','Siemens','松下','Panasonic','奥克斯','卡萨帝','创维','长虹','海信','小天鹅','志高',
+  '科沃斯','石头','追觅','云鲸','iRobot','美的扫地机','米家','小米电视','极米','当贝','坚果',
+  '荣事达','澳柯玛','容声','奥马','华凌','统帅','三星电视','LG电视','索尼电视',
+  '虎牌','象印','雪花','格兰仕','摩飞','北鼎','大宇','小熊','东菱',
+
+  // ========== 母婴亲子 ==========
+  '飞鹤','金领冠','美赞臣','惠氏','雅培','合生元','三元奶粉','贝因美','君乐宝','蓝河','启赋','澳优','可瑞康','嘉宝','亨氏','小皮','秋田满满','英氏',
+  '巴布豆','贝亲','花王','尤妮佳','帮宝适','好奇','大王','可心柔','妈咪宝贝','安儿乐','爹地宝贝','露安适',
+  '巴拉巴拉','安奈儿','戴维贝拉','英氏童装','拉比','小猪班纳','迷你巴拉','aqpa','齐齐熊','童泰',
+  '伊可新','儿歌点读笔','科大讯飞学习机','步步高家教机','优学派','名校堂','火火兔','迪士尼绘本','乐高','费雪','奥迪双钻',
+
+  // ========== 食品饮料 ==========
+  '蒙牛','伊利','光明','三元','认养一头牛','简爱','卡士','明治','安慕希','纯甄','金典','特仑苏',
+  '茅台','五粮液','洋河','汾酒','泸州老窖','剑南春','水井坊','古井贡酒','江小白','张裕','长城葡萄酒','百威','青岛啤酒','燕京','哈尔滨啤酒','雪花啤酒','喜力','嘉士伯',
+  '可口可乐','百事可乐','元气森林','农夫山泉','怡宝','娃哈哈','康师傅','统一','王老吉','加多宝','椰树','旺旺','维他','东方树叶',
+  '星巴克','瑞幸','Costa','Tims','麦咖啡','喜茶','奈雪','蜜雪冰城','库迪','霸王茶姬','茶颜悦色','茶百道','古茗','沪上阿姨','7分甜','一点点',
+  '三只松鼠','百草味','良品铺子','卫龙','旺旺','乐事','上好佳','达利园','盼盼','奥利奥','奇多','可比克','薯愿',
+  '潘祥记','稻香村','五芳斋','北京稻香村','沈大成','广州酒家','元祖','满记甜品','哈根达斯','八喜','梦龙','和路雪',
+
+  // ========== 美妆护肤 ==========
+  '珀莱雅','薇诺娜','韩束','HBN','可复美','花西子','完美日记','彩棠','TIMAGE','毛戈平','PMPM','逐本','谷雨','百雀羚','自然堂','卡姿兰','丸美','相宜本草','美加净','大宝','片仔癀','植物医生','林清轩',
+  '欧莱雅','兰蔻','雅诗兰黛','Olay','SK-II','赫莲娜','HR','海蓝之谜','LaMer','资生堂','Shiseido','CPB','肌肤之钥','娇兰','Guerlain','Dior','迪奥','YSL','圣罗兰','香奈儿','Chanel','纪梵希','Givenchy','倩碧','Clinique','雅漾','Avene','理肤泉','薇姿','La Roche-Posay',
+  'Fenty Beauty','3CE','MAC','魅可','Charlotte Tilbury','NARS','植村秀','贝玲妃','Benefit','Too Faced','Urban Decay','TF','汤姆福特','TomFord','Armani','阿玛尼','悦诗风吟','Innisfree','后','雪花秀','艾杜纱','井田','凯朵',
+
+  // ========== 服饰穿戴 ==========
+  '优衣库','UNIQLO','UR','Urban Revivo','MOCO','Zara','H&M','GAP','Mango','Massimo Dutti','无印良品MUJI','MUJI',
+  '蕉内','蕉下','内外','NEIWAI','ubras','奶糖派','都市丽人','安莉芳','曼妮芬','爱慕','维多利亚的秘密',
+  '波司登','加拿大鹅','Moncler','蒙口','北面','TheNorthFace','始祖鸟','哥伦比亚','狼爪','骆驼','南极人','恒源祥','鸭鸭','雅鹿',
+  '耐克','Nike','阿迪达斯','Adidas','安踏','李宁','361度','特步','匡威','Converse','彪马','Puma','New Balance','NB','ASICS','亚瑟士','Hoka','On昂跑','斯凯奇','Skechers','鸿星尔克','回力','Vans','UGG','马丁靴','Dr.Martens',
+  '雅鹿','梦特娇','卡帝乐鳄鱼','花花公子','GXG','美特斯邦威','森马','以纯','海澜之家','九牧王','劲霸','利郎','七匹狼','报喜鸟','雅戈尔',
+  'COACH','MK','迈克高仕','Tory Burch','Furla','卡西欧','Casio','天梭','Tissot','卡地亚','劳力士','欧米茄','浪琴','西铁城',
+
+  // ========== 平台教育 / 本地生活 ==========
+  '学而思','猿辅导','作业帮','有道','新东方','东方甄选','网易有道','VIPKID','51Talk','小猿口算','一起学','希沃',
+  '美团','大众点评','饿了么','美团外卖','哈啰','滴滴','高德','花小猪','曹操出行','T3出行','嘀嗒',
+  '携程','飞猪','去哪儿','同程','马蜂窝','穷游','Airbnb','华住会','锦江','汉庭','7天','希尔顿','洲际','万豪',
+  '闲鱼','转转','找靓机','回收宝','爱回收','拍拍','京东以旧换新',
+  '抖音','快手','小红书','视频号','B站','哔哩哔哩','知乎','微博','微信','支付宝','淘宝','天猫','京东','拼多多','唯品会','网易严选',
+];
+
+/* === 商品词典:卖点词 + 核心品类词 — 按 8 大品类组织,每类 30-60 个 === */
+const PRODUCT_SELLING = [
+  // ========== 3C数码 卖点 ==========
+  '快充','闪充','120W快充','100W快充','5G双卡','超长续航','5000mAh','5500mAh','一英寸大底','潜望长焦','光学防抖','AI拍照','夜景模式','人像虚化','4K录像','HDR10+',
+  '钛金属','曲面屏','直屏','120Hz高刷','144Hz','OLED屏','LTPO','护眼模式',
+  '折叠屏','大折叠','小折叠','轻薄折叠','骁龙8','天玑9','麒麟9020','M3芯片','M4芯片','统一内存',
+  'AI助手','AI影像','AI修图','AI字幕','AI翻译','AI去除路人',
+  // 3C 核心品类
+  '手机','5G手机','AI手机','平板电脑','笔记本电脑','游戏本','轻薄本','一体机','显示器','显卡','主板','内存条','固态硬盘','机械键盘','人体工学椅',
+  '蓝牙耳机','降噪耳机','头戴耳机','TWS耳机','无线鼠标','投影仪','智能音箱','充电宝','磁吸充电','钢化膜','保护壳','数据线','GaN氮化镓',
+
+  // ========== 家居家装 卖点 ==========
+  '软体床','乳胶床垫','弹簧床垫','护脊床垫','抗菌防螨','除螨','深度清洁','无甲醛','环保板材','实木家具','北欧风','极简风','奶油风','法式风','侘寂风','新中式',
+  '可水洗','防泼水','防污渍','耐脏','耐磨','防火','保温','静音','隔音',
+  '岛台','收纳神器','大容量收纳','立体收纳','可折叠','节省空间','旋转挂钩',
+  // 家居 核心品类
+  '床垫','沙发','茶几','餐桌','床品四件套','床单','枕头','被子','蚕丝被','羽绒被','凉席','地毯','地垫','窗帘','壁纸','瓷砖','木地板','衣柜','书柜','鞋柜',
+  '马桶','花洒','水龙头','浴缸','收纳盒','收纳箱','晾衣架','拖把','垃圾袋','拉杆箱',
+  '插排','插座','智能开关','灯具','吊灯','落地灯','护眼台灯','除湿盒',
+
+  // ========== 家用电器 卖点 ==========
+  '一级能效','变频','省电','节能','超薄','嵌入式','大容量','大风量','母婴模式','除菌洗','分区洗','洗烘一体','蒸汽洗','热泵烘干','静音','低噪音','APP远程控制','智能互联','米家联动','华为智选',
+  '自清洁','自动集尘','自动洗烘','烘干杀菌','上下水改造','无水痕',
+  // 家电 核心品类
+  '空调','变频空调','中央空调','一级能效空调','冰箱','法式四门','十字四门','十字对开','双开门','洗衣机','滚筒洗衣机','波轮洗衣机','洗烘套装','洗碗机','烟灶套装','油烟机','燃气灶','蒸烤箱','蒸烤一体机','嵌入式蒸烤','空气炸锅','破壁机','料理机','电饭煲','IH电饭煲',
+  '电视','激光电视','投影仪','OLED电视','MiniLED电视','加湿器','净化器','空气净化器','除湿机','取暖器','暖风机','电热毯','电吹风','卷发棒','直发夹','吹风机','美容仪','射频美容仪','脱毛仪','洗脸仪',
+  '扫地机器人','洗地机','吸尘器','手持吸尘器','拖地机器人',
+
+  // ========== 母婴亲子 卖点 ==========
+  'A2蛋白','A2β酪蛋白','OPO结构脂','HMO母乳低聚糖','益生菌','益生元','DHA','ARA','叶黄素','水解蛋白','低敏','抗过敏','无添加蔗糖','原装进口','奶源直采','可生饮奶源',
+  '柔软透气','超薄','瞬吸','干爽','防漏','拉拉裤设计','腰围弹性','尿显',
+  '可水洗','安全无毒','EN71认证','BPA Free','食品级硅胶','防呛奶','防胀气',
+  // 母婴 核心品类
+  '奶粉','配方奶粉','婴儿奶粉','成长奶粉','学生奶粉','羊奶粉','有机奶粉','尿不湿','纸尿裤','拉拉裤','奶瓶','奶嘴','安抚奶嘴','婴儿推车','安全座椅','腰凳','婴儿床','婴儿背带',
+  '辅食米粉','磨牙棒','果泥','肉泥','宝宝零食','磨牙饼干','儿童学习机','点读笔','早教机','故事机','积木','拼图','绘本','童书','儿童画板','儿童手表',
+  '童装','童鞋','学步鞋','机能鞋','纸尿裤湿巾','婴儿湿巾','口水巾','围嘴','防晒衣童款',
+
+  // ========== 食品饮料 卖点 ==========
+  '0糖','0卡','0脂','低糖','低脂','高蛋白','高纤维','无添加','无防腐剂','纯天然','有机','非转基因','原产地直采','原切肉','现磨','冷萃','冻干','冷压榨','低温巴氏','常温奶','3.6g乳蛋白','4.0g乳蛋白','A2β','益生菌酸奶','益生元',
+  '直降','清仓','官方旗舰','百亿补贴','官方补贴','到手价','券后价','秒杀','限时','限量',
+  // 食品 核心品类
+  '牛奶','酸奶','奶酪','黄油','咖啡','挂耳咖啡','速溶咖啡','即饮咖啡','美式咖啡','拿铁','奶茶','气泡水','果汁','椰汁','椰子水','茶饮','无糖茶',
+  '坚果','每日坚果','开心果','巴旦木','腰果','夏威夷果','零食','薯片','饼干','曲奇','辣条','魔芋爽','卤味','鸭脖','凤爪','螺蛳粉','自热火锅','方便面','拉面','速食','水饺',
+  '粽子','鲜肉粽','豆沙粽','蛋黄粽','咸鸭蛋','月饼','流心月饼','五仁月饼','糕点',
+  '车厘子','榴莲','西瓜','阳光玫瑰','蓝莓','车厘子大果','智利车厘子',
+  '白酒','酱香酒','浓香酒','红酒','干红','起泡酒','清酒','啤酒','精酿啤酒','果味啤酒',
+
+  // ========== 美妆护肤 卖点 ==========
+  '抗老','抗皱','紧致','淡纹','焕亮','美白','377美白','烟酰胺','视黄醇','A醇','玻尿酸','多肽','胶原蛋白','维C','维A','积雪草','神经酰胺','二裂酵母','虾青素','麦角硫因','五胜肽','蓝铜胜肽',
+  '保湿','补水','水润','控油','清爽','祛痘','刷酸','水杨酸','果酸','壬二酸','美白淡斑','收缩毛孔','黑头粉刺','闭口痘痘',
+  '敏感肌可用','医美级','械字号','二类医疗器械','屏障修护','舒缓修护','零刺激','弱酸性','低敏配方',
+  '哑光','奶油雾面','水光','镜面','显白','显气色','黄皮显白','黑皮友好','姨妈色','番茄色','枫叶色','奶茶色','豆沙色','吃土色',
+  // 美妆 核心品类
+  '面膜','贴片面膜','涂抹面膜','睡眠面膜','水洗面膜','精华液','精华水','安瓶','水乳','爽肤水','化妆水','乳液','面霜','眼霜','面部精华','颈纹霜','身体乳','护手霜','身体磨砂',
+  '防晒霜','物理防晒','化学防晒','防晒喷雾','身体防晒','嘴唇防晒',
+  '口红','哑光口红','水光口红','唇泥','唇釉','唇彩','唇膏','唇蜜',
+  '粉底液','粉底霜','气垫BB','气垫CC','遮瑕','遮瑕膏','蜜粉','散粉','定妆喷雾','高光','修容','腮红','腮红霜',
+  '眼影','眼影盘','眼线笔','眼线液','睫毛膏','眉笔','眉粉','美瞳','卸妆水','卸妆油','卸妆膏','洗面奶','洁面乳','洁面慕斯',
+
+  // ========== 服饰穿戴 卖点 ==========
+  '冰丝','凉感','UPF50+','UPF40+','黑胶涂层','防紫外线','防晒','防水','拒水','透气','速干','吸湿排汗','抗菌','抗皱','弹力','显瘦','宽松','修身','百搭','基础款','纯棉','100%棉','莱赛尔','天丝','羊毛','羊绒','100%羊毛','澳洲羊毛','蚕丝','真丝','缎面',
+  '无尺码','零束缚','无钢圈','软支撑','聚拢提升','收副乳','调整型','薄款','厚款','加绒','加厚','打底',
+  '梨形身材','沙漏身材','大胸显小','小胸显大','遮肉','显高','显腿长',
+  // 服饰 核心品类
+  'T恤','短袖','长袖T','POLO衫','衬衫','卫衣','连帽卫衣','开衫','针织衫','毛衣','背心','吊带',
+  '连衣裙','短裙','半身裙','马面裙','百褶裙','A字裙','长裙','西装裙',
+  '短裤','长裤','九分裤','直筒裤','阔腿裤','西装裤','牛仔裤','哈伦裤','运动裤','瑜伽裤','打底裤','冰丝裤','防晒裤',
+  '外套','西装','西装外套','风衣','大衣','羊毛大衣','羽绒服','轻薄羽绒服','派克服','棉服','机车夹克','防晒衣','冲锋衣','冲锋裤','骑行服',
+  '内衣','文胸','无尺码内衣','无钢圈内衣','无痕内裤','男士内裤','袜子','船袜','长筒袜',
+  '运动鞋','跑鞋','篮球鞋','板鞋','帆布鞋','马丁靴','短靴','雪地靴','拖鞋','凉鞋','洞洞鞋','人字拖',
+  '腕表','智能手表','机械表','石英表','双肩包','单肩包','手提包','钱包','卡包','腰带','墨镜','防晒口罩','遮阳帽','渔夫帽','棒球帽',
+
+  // ========== 平台教育 / 本地生活 卖点 ==========
+  '名师直播','一对一辅导','拍照搜题','AI智能批改','错题本','在线答疑','名校师资','985名师','北大清华团队','押题密卷','真题解析',
+  '酒+景套餐','机+酒套餐','机票直降','含早餐','含双早','免费取消','闪住','快速退房','24小时前台','行政酒廊','无限次接送',
+  '同城配送','30分钟达','次日达','极速送达','顺丰包邮','京东物流','货到付款','7天无理由','以旧换新','免费上门取件','免费安装','免费清洗','5年质保','只换不修','延保3年',
+  '会员折扣','PLUS会员','88VIP','限时秒杀','满减','满199减30','跨店满减','店铺优惠券','新人券','回购券',
+  // 平台/服务 核心品类
+  '考研网课','考公网课','少儿英语','启蒙英语','学科辅导','一对一','大班课','小班课','直播课','录播课','学习机','点读笔',
+  '酒店预订','机票预订','火车票','门票预订','景区门票','跟团游','自由行','私家团','一日游',
+  '本地外卖','到店餐饮','超市配送','买药上门','宠物上门','家政上门','保洁上门','搬家服务','维修上门',
+  '二手数码','二手家电','二手图书','二手奢品','回收手机','回收家电','以旧换新','官方验机',
+];
+
+/* 把所有词按长度倒序,长词优先匹配,避免子串误覆盖 */
+const TOPIC_LIST   = [...new Set(TOPIC_DICT)].sort((a,b)=>b.length-a.length);
+const PRODUCT_LIST = [...new Set([...PRODUCT_BRANDS, ...PRODUCT_SELLING])].sort((a,b)=>b.length-a.length);
+
+function dictExtract(text, dict){
+  if(!text) return [];
+  const hits = [];
+  const taken = new Array(text.length).fill(false);
+  for(const w of dict){
+    if(w.length<2) continue;
+    let from = 0;
+    while(true){
+      const idx = text.indexOf(w, from);
+      if(idx<0) break;
+      // 检查是否已被更长词覆盖
+      let overlap = false;
+      for(let i=idx;i<idx+w.length;i++){ if(taken[i]){overlap=true;break;} }
+      if(!overlap){
+        hits.push(w);
+        for(let i=idx;i<idx+w.length;i++) taken[i] = true;
+      }
+      from = idx + 1;
+    }
+  }
+  return hits;
+}
+
+function buildCloudData(lists, catKey, isProduct){
+  const dict = isProduct ? PRODUCT_LIST : TOPIC_LIST;
+  const m = new Map();
+  lists.forEach(l=>{
+    l.items.forEach(it=>{
+      if(catKey!=='ALL' && categorize(it.title)!==catKey) return;
+      const weight = Math.max(parseMetric(it.metric)||5e4, 1e4);
+      const hits = dictExtract(it.title, dict);
+      const seen = new Set();
+      hits.forEach(t=>{
+        if(seen.has(t)) return; seen.add(t);
+        const cur = m.get(t) || {value:0, src:l.sourceName, times:0,
+                                  type: (isProduct && PRODUCT_BRANDS.includes(t)) ? 'brand' : (isProduct?'selling':'topic')};
+        cur.value += weight; cur.times += 1;
+        m.set(t, cur);
+      });
+    });
+  });
+  const arr = [...m.entries()].map(([name,o])=>({name, value:o.value, src:o.src, times:o.times, type:o.type}));
+  arr.sort((a,b)=>b.value-a.value);
+  return arr.slice(0,80);
+}
+
+let chTopics, chProducts;
+function renderCloud(divId, data, palette, chartRef){
+  const el = document.getElementById(divId);
+  if(!data.length){
+    el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'Noto Serif SC',serif;color:var(--muted);font-style:italic">— 该品类下暂无数据 —</div>`;
+    return null;
+  }else{
+    if(el.innerHTML.indexOf('暂无数据')>=0) el.innerHTML='';
+  }
+  const ch = echarts.init(el,null,{renderer:'canvas'});
+  ch.setOption({
+    tooltip:{backgroundColor:'#0d0c0a',borderColor:'#0d0c0a',textStyle:{color:'#f4ede1',fontFamily:'Noto Serif SC',fontSize:12},
+      formatter:p=>{
+        const typeLabel = p.data.type==='brand'?'<span style="color:#d99c2b">品牌词</span>':p.data.type==='selling'?'<span style="color:#3a8c4a">卖点词</span>':'<span style="color:#c8331f">话题词</span>';
+        return `<b style="color:${p.color};font-size:14px">${p.name}</b> ${typeLabel}<br/>来源:${p.data.src}<br/>命中次数:${p.data.times}`;
+      }},
+    series:[{
+      type:'wordCloud',shape:'circle',left:'center',top:'center',
+      width:'95%',height:'92%',sizeRange:[14,64],rotationRange:[-30,30],rotationStep:15,
+      gridSize:7,drawOutOfBound:false,layoutAnimation:true,
+      textStyle:{fontFamily:'"Fraunces","Noto Serif SC",serif',fontWeight:'800',fontStyle:'italic',
+        color:function(){return palette[Math.floor(Math.random()*palette.length)];}},
+      emphasis:{focus:'self',textStyle:{textShadowBlur:8,textShadowColor:'rgba(200,51,31,.4)'}},
+      data
+    }]
+  });
+  return ch;
+}
+function renderClouds(){
+  const cat = STATE.cloudCat;
+  const dataT = buildCloudData(STATE.hotLists,  cat, false);
+  const dataP = buildCloudData(STATE.shopLists, cat, true);
+  if(chTopics) chTopics.dispose();
+  if(chProducts) chProducts.dispose();
+  chTopics   = renderCloud('cloudTopics',   dataT, ['#c8331f','#d99c2b','#7d3a8c','#1f5fbd','#0d0c0a']);
+  chProducts = renderCloud('cloudProducts', dataP, ['#1a4d3f','#3a8c4a','#1f5fbd','#b86b1f','#0d0c0a']);
+}
+window.addEventListener('resize',()=>{chTopics?.resize();chProducts?.resize();});
+
+/* ============ EDITORIAL ============ */
+function renderNarratives(latest, snaps, resonance, ng){
+  const totalItems = latest.lists.reduce((s,l)=>s+l.items.length,0);
+  const platCount = latest.lists.length;
+  const days = snaps.length;
+  let n1 = `<span class="dropcap">T</span>今日共归档 <b>${platCount}</b> 个榜单、<b>${totalItems}</b> 条词条。`;
+  if(resonance.length){
+    n1 += `跨平台共振 TOP1 为 <em>「${escHtml(resonance[0][0])}」</em>,在 ${resonance[0][1].count} 个平台同时上榜——突破单一圈层、进入大众视野的标志。`;
+  }else{
+    n1 += `各平台热点分散,无显著跨平台共振词,圈层注意力相对独立。`;
+  }
+  if(resonance.length>=3) n1 += `紧随其后的 <b>${escHtml(resonance[1][0])}</b> 与 <b>${escHtml(resonance[2][0])}</b> 同样在多平台同步发酵,具备成为<em>下一波热点中枢</em>的潜力。`;
+
+  const shopItems = latest.lists.filter(l=>l.category==='shopping').reduce((s,l)=>s+l.items.length,0);
+  const hotItems = totalItems - shopItems;
+  let n2 = `近 <b>${days}</b> 天走势图揭示一个规律:工作日舆情型平台(微博、百度)放量明显,周末电商榜单上扬。`;
+  n2 += `今日热搜 <b>${hotItems}</b> 条 vs 电商热销 <b>${shopItems}</b> 条,${hotItems>shopItems?'舆情更活跃,适合做<em>事件型借势营销</em>。':'电商榜更密集,购物决策窗口正在打开,适合做<em>转化型场景投放</em>。'}`;
+  n2 += `结合"今日新晋商品/品牌"(<b>${ng.newCount}</b>)与"退榜商品"(<b>${ng.goneCount}</b>),可以从电商货架的<em>SKU 进出</em>识别真实购买力的流向。`;
+  document.getElementById('narr1').innerHTML = n1;
+  document.getElementById('narr2').innerHTML = n2;
+}
+
+function buildTrendInsight(latest, snaps, resonance, ng){
+  let lead = `近 <b>${snaps.length}</b> 天的归档数据,`;
+  if(resonance.length) lead += `今日跨平台共振词 <b>${resonance.length}</b> 个,TOP1 是 <em>「${escHtml(resonance[0][0])}」</em>(${resonance[0][1].count} 平台)。`;
+  else lead += `今日各平台热点高度分散,无显著共振词。`;
+  if(ng.newCount>=8) lead += `电商端新晋商品/品牌 <b>${ng.newCount}</b> 个,SKU 货架<em>换新明显</em>;`;
+  else if(ng.newCount>0) lead += `电商端新晋商品/品牌 <b>${ng.newCount}</b> 个;`;
+  if(ng.goneCount>=8) lead += `同时退榜 <b>${ng.goneCount}</b> 个,购买力<em>转移迅速</em>。`;
+  else if(ng.goneCount>0) lead += `退榜 <b>${ng.goneCount}</b> 个。`;
+  return {lead, items:[`走势图按平台聚合每日总热度`,`共振词反映跨圈层穿透力`,`新晋/退榜识别 SKU 进出货架的动态`,`双词云对照话题与商品/品牌`]};
+}
+
+/* ============ MARKETING PLAYBOOK · 8 大品类 × 4-5 二级品类 ============ */
+/*
+  每行结构: { sub: 二级品类, scene: 营销场景, topics: [话题钩子], strategy: 投放策略建议 }
+  topics 中的词若命中今日真实热搜/电商榜单,前端会高亮(.chip.live)
+*/
+const MKT_PLAYBOOK = {
+  C3: [
+    {sub:'AI手机',     scene:'AI 大模型换机潮',     topics:['DeepSeek','iPhone17','华为Mate70','小米15','AI手机'],
+     strategy:'以「<em>AI 体验首发</em>」为内容钩子,联合 <b>科技垂类 KOL</b> 做端侧大模型实测短视频(抖音/B站),配合品牌官方账号发布对比横评长图文。投放阵地:抖音科技榜、知乎数码盐选、小红书新机种草。'},
+    {sub:'笔电游戏本', scene:'AI PC × 开学季',      topics:['MacBook','M4芯片','RTX5090','游戏本'],
+     strategy:'瞄准「<em>开学换机</em> + AI 创作者」双场景,用 <b>剪辑/3D/编程效率提升对比</b> 做内容硬通货。投放阵地:B站数码区、知乎专栏、京东超级新品日。重点强调散热与续航对比。'},
+    {sub:'影像设备',   scene:'618 影像季 / 出游记录', topics:['大疆','iPhone17Pro','一英寸大底','潜望长焦'],
+     strategy:'借势 <em>五一/暑期出行</em>,与旅游博主、Vlog 创作者共创「<b>一镜到底旅拍</b>」内容,绑定大疆/影石新品。投放阵地:小红书旅拍话题、抖音随手记 Vlog。'},
+    {sub:'穿戴 / 耳机', scene:'AI 耳机 + AI 眼镜首发',topics:['AirPods','Apple Watch','AI眼镜','降噪耳机'],
+     strategy:'以「<em>实时翻译/同声传译/AI 助理</em>」为产品支点,联合海外党、商务人群 KOL 做场景化测评。投放阵地:小红书职场/留学话题、即刻、视频号商务圈层。'},
+    {sub:'PC 外设',    scene:'电竞 + 居家办公升级',  topics:['机械键盘','显示器','人体工学椅','GaN氮化镓'],
+     strategy:'与电竞主播、桌搭博主共创「<b>桌面好物 100 件</b>」清单内容。投放阵地:B站桌搭 Tag、小红书桌面美学、抖音电竞达人合集。'},
+  ],
+  HOME: [
+    {sub:'卧室寝具',   scene:'换季 × 助眠经济',     topics:['乳胶床垫','蚕丝被','席梦思','慕思','喜临门'],
+     strategy:'以「<em>春困/失眠/熬夜党</em>」为情绪钩子,联合睡眠博主与中医达人做「<b>科学助眠</b>」内容。投放阵地:小红书睡眠话题、抖音家居橱窗、知乎健康专栏。'},
+    {sub:'整装/装修',  scene:'婚装/换房季',         topics:['全屋定制','岛台厨房','北欧风','新中式家居'],
+     strategy:'用 <em>装修日记/避坑攻略</em> 长内容沉淀私域,投放阵地以 <b>抖音家居话题、小红书装修笔记、好好住 APP</b> 为主,重点孵化「素人改造案例」。'},
+    {sub:'卫浴升级',   scene:'局改 / 适老化改造',   topics:['智能马桶','即热花洒','大花洒','九牧','箭牌'],
+     strategy:'以「<em>3 天搞定卫生间局改</em>」为内容钩子,与装修垂类 KOC 共创「<b>局改前后对比</b>」短视频。投放阵地:抖音家居榜、京东家装节、天猫超级品类日。'},
+    {sub:'软装收纳',   scene:'治愈系居家氛围',      topics:['收纳神器','可折叠','奶油风','法式风','北欧风'],
+     strategy:'与生活方式博主共创「<b>10 ㎡治愈出租屋</b>」「<b>5 件让小户型立刻高级</b>」清单内容。投放阵地:小红书居家话题、视频号生活方式。'},
+  ],
+  APPL: [
+    {sub:'空冰洗大件',  scene:'以旧换新 / 国补红利',  topics:['一级能效','变频空调','洗烘一体','美的','海尔','格力'],
+     strategy:'用「<em>国补 + 厂补 + 平台补</em>」三补叠加做利益点,锚定 <b>政府以旧换新</b> 政策红利。投放阵地:京东超级品类日、抖音家电榜、苏宁视频号。重点拍上下水改造、师傅上门安装的真实片段建立信任。'},
+    {sub:'清洁家电',   scene:'懒人解放 / 宝妈刚需', topics:['扫地机器人','洗地机','石头','追觅','科沃斯'],
+     strategy:'与「<em>宝妈/养宠/上班族</em>」KOL 合作真实长测,展示 <b>毛发缠绕/油污/婴儿食物残渣</b> 等真实场景。投放阵地:小红书清洁焦虑话题、抖音家居好物、视频号宝妈圈层。'},
+    {sub:'厨房小家电', scene:'快手早餐 / 减脂代餐',  topics:['空气炸锅','破壁机','蒸烤一体机','九阳','苏泊尔'],
+     strategy:'以「<em>10 分钟早餐</em>」「<em>无油低脂减脂餐</em>」为内容模板,联合美食博主出 <b>食谱合集</b>。投放阵地:小红书减脂话题、抖音美食 Tag、下厨房 APP。'},
+    {sub:'美容仪器',   scene:'抗老焦虑 / 妈妈节',    topics:['戴森吹风机','射频美容仪','脱毛仪','美容仪'],
+     strategy:'借势 <em>母亲节/520/618</em> 做「<b>送妈妈/送女友</b>」礼赠场景,搭配抗老博主长测。投放阵地:小红书抗老话题、抖音美容仪测评号、视频号女性圈层。'},
+    {sub:'电视影音',   scene:'世界大赛 / 客厅升级',  topics:['激光电视','投影仪','OLED电视','MiniLED'],
+     strategy:'结合 <em>奥运/世界杯/演唱会直播</em> 等大赛事窗口,做 <b>客厅观影场景</b> 内容。投放阵地:抖音生活家电、京东超级品类日、小红书客厅改造话题。'},
+  ],
+  BABY: [
+    {sub:'婴幼儿奶粉', scene:'科学喂养 / 过敏防护', topics:['A2蛋白','HMO','飞鹤','金领冠','可瑞康','益生菌'],
+     strategy:'用「<em>儿科医生/营养师背书</em>」做权威内容,在 <b>母婴垂类账号</b> 投放科普长图文 + 短视频。投放阵地:宝宝树、小红书母婴话题、抖音育儿榜、有赞母婴。强调奶源/配方/认证。'},
+    {sub:'纸尿裤湿巾', scene:'夏季透气 / 红屁屁',   topics:['尿不湿','拉拉裤','花王','帮宝适','好奇'],
+     strategy:'抓住 <em>梅雨季/盛夏</em> 痛点,以「<b>透气干爽/不闷红屁屁</b>」为卖点,做 <b>同价位横评</b>。投放阵地:小红书母婴种草、抖音宝妈达人、京东母婴超级品类日。'},
+    {sub:'童装童鞋',   scene:'母女装 / 亲子穿搭',   topics:['母女装','亲子装','学步鞋','巴拉巴拉','童装新品'],
+     strategy:'借势 <em>母亲节/儿童节/开学季</em>,联合时尚妈妈 KOL 拍「<b>亲子穿搭日常</b>」。投放阵地:小红书亲子穿搭话题、抖音宝妈日常号、视频号家庭账号。'},
+    {sub:'早教学习',   scene:'幼小衔接 / 暑期续报', topics:['学习机','点读笔','绘本','科大讯飞学习机','乐高'],
+     strategy:'以「<em>幼小衔接/暑期不掉队</em>」为焦虑钩子,投放 <b>名师试听课、错题本演示</b> 等真实功能片段。投放阵地:小红书育儿话题、抖音教育专栏、知乎家长圈。'},
+    {sub:'童车安全',   scene:'出行安全 / 二胎升级', topics:['婴儿推车','安全座椅','腰凳','婴儿背带'],
+     strategy:'与儿科/出行安全 KOL 共创「<b>3C 国标科普</b>」内容,强调 <em>侧撞/正撞测试视频</em>。投放阵地:小红书安全座椅话题、抖音母婴大号、京东母婴超级品类日。'},
+  ],
+  FOOD: [
+    {sub:'乳制品',     scene:'高端化 / 健身代餐',   topics:['A2β酪蛋白','简爱','认养一头牛','安慕希','金典','希腊酸奶'],
+     strategy:'用「<em>健身/低脂/儿童成长</em>」三大场景拆人群,联合健身教练、营养师做 <b>成分表科普</b>。投放阵地:小红书健身话题、抖音营养师达人、视频号健身圈层。'},
+    {sub:'饮料茶饮',   scene:'夏季解暑 / 0 糖风潮', topics:['元气森林','东方树叶','喜茶','瑞幸','库迪','蜜雪冰城'],
+     strategy:'以「<em>0 糖 0 卡 / 真茶冷萃</em>」为产品支点,做 <b>城市便利店货架探店</b>。投放阵地:小红书饮料种草话题、抖音便利店 Tag、视频号本地达人。'},
+    {sub:'零食坚果',   scene:'追剧 / 办公室囤货',   topics:['三只松鼠','百草味','良品铺子','卫龙','每日坚果','卫龙魔芋爽'],
+     strategy:'用「<em>追剧/加班/小聚</em>」生活场景做内容模板,做 <b>每日坚果/魔芋爽合辑</b>。投放阵地:抖音零食榜、小红书办公室零食话题、京东超级零食日。'},
+    {sub:'生鲜水果',   scene:'时令尝鲜 / 健康饮食', topics:['车厘子','榴莲','阳光玫瑰','西瓜','智利车厘子'],
+     strategy:'借势 <em>时令上市窗口期</em>,联合美食测评号做「<b>盲测/原产地溯源</b>」内容。投放阵地:抖音美食 Tag、小红书水果种草、视频号探店达人。'},
+    {sub:'酒水节庆',   scene:'婚宴 / 节日礼赠',     topics:['茅台','五粮液','酱香拿铁','青岛啤酒','精酿啤酒'],
+     strategy:'以「<em>婚宴/中秋/年货</em>」礼赠场景为主线,联合美食/酒类垂类 KOL 做 <b>真实开瓶/对饮</b>。投放阵地:抖音酒类话题、小红书礼赠话题、京东酒水超级品类日。'},
+  ],
+  BEAU: [
+    {sub:'抗老精华',   scene:'熬夜抗老 / 早C晚A',   topics:['烟酰胺','视黄醇','玻尿酸','珀莱雅','HBN','可复美'],
+     strategy:'用「<em>成分党</em>」叙事做硬核背书,联合 <b>护肤博主/皮肤科医生</b> 做成分对比与刷酸耐受测评。投放阵地:小红书抗老话题、抖音成分号、知乎护肤盐选。'},
+    {sub:'敏感肌修护', scene:'换季泛红 / 屏障受损', topics:['薇诺娜','可复美','薇姿','理肤泉','医美级','二类医疗器械'],
+     strategy:'与「<em>医美术后/玫瑰痤疮/敏感肌</em>」人群 KOL 共创真实修护日记。投放阵地:小红书敏感肌话题、抖音医美博主、视频号皮肤科医生。'},
+    {sub:'底妆遮瑕',   scene:'婚礼妆 / 通勤定妆',   topics:['粉底液','气垫','遮瑕','维C定妆','TIMAGE','彩棠'],
+     strategy:'借势 <em>婚礼季/毕业季</em>,联合化妆师做「<b>10 小时持妆挑战</b>」直播测评。投放阵地:小红书底妆话题、抖音化妆师博主、视频号婚庆圈。'},
+    {sub:'唇妆色彩',   scene:'国风妆造 / 显白色号', topics:['口红','哑光口红','千里江山图妆造','花西子','毛戈平','MAC'],
+     strategy:'以「<em>国风/新中式妆造</em>」为内容主题,联合古风/汉服博主做 <b>整套妆造分解</b>。投放阵地:小红书国风话题、抖音古风穿搭号、B站妆造区。'},
+    {sub:'防晒美白',   scene:'户外 / 海岛旅行',     topics:['防晒霜','物理防晒','377美白','UPF50+'],
+     strategy:'抓住 <em>五一/暑期/海岛季</em>,做「<b>海岛通勤双场景防晒</b>」内容。投放阵地:小红书防晒话题、抖音旅行达人、视频号户外圈层。'},
+  ],
+  CLOT: [
+    {sub:'夏季防晒衣', scene:'通勤防晒 / 户外徒步', topics:['防晒衣','防晒裤','UPF50+','蕉下','冰丝','凉感'],
+     strategy:'用「<em>通勤族/户外党/亲子出行</em>」三场景拆解,联合 <b>女性穿搭博主 + 户外博主</b> 共创内容。投放阵地:小红书防晒话题、抖音穿搭达人、视频号女性圈层。'},
+    {sub:'内衣家居服', scene:'无尺码 / 软支撑',     topics:['无尺码内衣','蕉内','内外','ubras','奶糖派'],
+     strategy:'以「<em>大胸显小/小胸自然/产后修复</em>」三大人群痛点为切入,联合 <b>女性身材博主</b> 做真实试穿。投放阵地:小红书内衣话题、抖音女性穿搭号、视频号女性圈层。'},
+    {sub:'运动鞋',     scene:'跑团 / 城市马拉松',   topics:['跑鞋','安踏','李宁','耐克','Hoka','On昂跑'],
+     strategy:'结合 <em>城市马拉松/夜跑活动</em>,与跑步博主共创「<b>5 公里/10 公里实测</b>」内容。投放阵地:小红书跑步话题、抖音运动达人、视频号体育圈。'},
+    {sub:'国潮中式',   scene:'马面裙 / 新中式穿搭', topics:['马面裙','汉服','新中式','宋制汉服','国风穿搭'],
+     strategy:'借势 <em>春节/七夕/中秋/古风节</em>,联合古风博主做「<b>新中式日常通勤化</b>」内容。投放阵地:小红书国风话题、抖音古风穿搭号、视频号文化圈。'},
+    {sub:'箱包腕表',   scene:'职场升级 / 礼赠',     topics:['双肩包','智能手表','Apple Watch','华为手表','腕表新品'],
+     strategy:'锚定「<em>职场新人/送礼商务</em>」场景,做 <b>通勤一周搭配</b> 内容。投放阵地:小红书职场话题、抖音穿搭号、视频号商务圈层。'},
+  ],
+  EDU: [
+    {sub:'K12 学科辅导', scene:'幼小衔接 / 暑期续报', topics:['学而思','猿辅导','作业帮','拍照搜题','名师直播'],
+     strategy:'以「<em>免费试听课 + AI 错题本</em>」做钩子,投放 <b>家长焦虑型内容</b>。投放阵地:小红书家长话题、抖音教育垂类、知乎家长圈。重点用真实学员提分案例。'},
+    {sub:'考研考公',   scene:'考公上岸 / 考研倒计时',topics:['考研倒计时','考公上岸','新东方','网课','一对一辅导'],
+     strategy:'用「<em>上岸学长直播复盘</em>」做长内容沉淀,搭配 <b>真题密押卷免费领</b> 钩子。投放阵地:B站考研区、小红书考公话题、知乎考研盐选、抖音教育榜。'},
+    {sub:'本地餐饮',   scene:'探店打卡 / 团餐套餐', topics:['美团','大众点评','到店餐饮','团购','本地外卖'],
+     strategy:'与 <b>城市探店博主</b> 共创「<em>人均 50 / 100 必吃榜</em>」清单内容。投放阵地:小红书城市探店话题、抖音同城探店达人、视频号本地圈。'},
+    {sub:'旅行出行',   scene:'五一/暑期长线游',     topics:['酒+景套餐','机票直降','携程','飞猪','华住会'],
+     strategy:'借势 <em>五一/暑期/国庆</em> 出行旺季,联合旅游博主做「<b>3 天 2 晚轻旅行</b>」内容。投放阵地:小红书旅行话题、抖音旅游达人、马蜂窝攻略区。'},
+    {sub:'二手回收',   scene:'以旧换新 / 平价消费', topics:['闲鱼','转转','以旧换新','回收手机','官方验机'],
+     strategy:'抓住 <em>新机发布 + 国补换新</em> 双窗口,联合 <b>数码博主</b> 做「<b>旧机一键估价/官方验机流程</b>」内容。投放阵地:小红书数码话题、抖音数码垂类、B站数码评测区。'},
+  ],
+};
+
+function renderMktTab(catKey){
+  const data = MKT_PLAYBOOK[catKey];
+  const el = document.getElementById('mktContent');
+  if(catKey==='ALL' || !data){
+    // ALL 时聚合所有品类的代表行
+    if(catKey==='ALL'){
+      const rows = [];
+      Object.entries(MKT_PLAYBOOK).forEach(([k,arr])=>{
+        const cat = CAT_BY_KEY[k];
+        rows.push({...arr[0], _cat: cat.ico+' '+cat.name});
+      });
+      el.innerHTML = renderMktTable(rows, /*all=*/true);
+      return;
+    }
+    el.innerHTML = `<div style="padding:30px;font-family:'Noto Serif SC',serif;font-style:italic;color:var(--muted);text-align:center">暂未配置该品类的营销 playbook</div>`;
+    return;
+  }
+  el.innerHTML = renderMktTable(data, /*all=*/false);
+}
+
+function renderMktTable(rows, isAll){
+  // 把今日实际命中的话题(出现在 latest 数据里)用 .live 高亮
+  const liveTopics = collectLiveTopics();
+  const head = isAll
+    ? `<div class="mkt-row head"><div>品类 / 二级</div><div>营销场景</div><div>话题钩子</div><div>投放策略</div></div>`
+    : `<div class="mkt-row head"><div>二级品类</div><div>营销场景</div><div>话题钩子</div><div>投放策略</div></div>`;
+  const body = rows.map(r=>{
+    const subText = isAll
+      ? `<div class="mkt-sub">${escHtml(r._cat)}<small>${escHtml(r.sub)}</small></div>`
+      : `<div class="mkt-sub">${escHtml(r.sub)}<small>Sub-Category</small></div>`;
+    const chips = r.topics.map(t=>{
+      const live = liveTopics.has(t);
+      return `<span class="chip ${live?'live':''}">${escHtml(t)}</span>`;
+    }).join('');
+    return `<div class="mkt-row">
+      <div data-label="品类">${subText}</div>
+      <div data-label="场景"><div class="mkt-scene">${escHtml(r.scene)}</div></div>
+      <div data-label="话题钩子"><div class="mkt-topics">${chips}</div></div>
+      <div data-label="策略建议"><div class="mkt-strategy">${r.strategy}</div></div>
+    </div>`;
+  }).join('');
+  return `<div class="mkt-table">${head}${body}</div>`;
+}
+
+function collectLiveTopics(){
+  const set = new Set();
+  const all = [...(STATE.hotLists||[]), ...(STATE.shopLists||[])];
+  all.forEach(l=>l.items.forEach(it=>{
+    const hits = dictExtract(it.title, TOPIC_LIST);
+    hits.forEach(t=>set.add(t));
+    const phits = dictExtract(it.title, PRODUCT_LIST);
+    phits.forEach(t=>set.add(t));
+  }));
+  return set;
+}
+
+/* ============ MAIN ============ */
+async function main(){
+  try{
+    const idx = await getJSON(URL_INDEX);
+    document.getElementById('totalDays').textContent = idx.totalDays;
+    document.getElementById('issueNum').textContent = String(idx.totalDays).padStart(3,'0');
+    const dates = idx.dates.slice();
+    const latestDate = dates[dates.length-1];
+    document.getElementById('curDate').textContent = latestDate;
+
+    const tail = dates.slice(-14);
+    const snaps = await Promise.all(tail.map(async d=>{
+      try{return {date:d,snap:await getJSON(dayUrl(d))}}catch(e){return {date:d,snap:null}}
+    }));
+    const latest = snaps[snaps.length-1].snap;
+    const yesterday = snaps.length>=2 ? snaps[snaps.length-2].snap : null;
+    document.getElementById('capAt').textContent = ago(latest?.capturedAt);
+    document.getElementById('kpi-platform').textContent = latest.lists.length;
+    document.getElementById('kpi-items').textContent = latest.lists.reduce((s,l)=>s+l.items.length,0);
+
+    STATE.latest = latest;
+    STATE.snapshots = snaps;
+    STATE.hotLists  = latest.lists.filter(l=>l.category==='hot-search');
+    STATE.shopLists = latest.lists.filter(l=>l.category==='shopping');
+
+    // category counts for tab bars
+    const hotCounts  = countByCategory(STATE.hotLists);
+    const shopCounts = countByCategory(STATE.shopLists);
+    const allCounts = {};
+    CAT_KEYS.forEach(k=> allCounts[k] = (hotCounts[k]||0) + (shopCounts[k]||0));
+
+    renderCatTabs('hotTabs',  STATE.hotCat,  hotCounts,  k=>{STATE.hotCat=k;renderHot();});
+    renderCatTabs('shopTabs', STATE.shopCat, shopCounts, k=>{STATE.shopCat=k;renderShop();});
+    renderCatTabs('cloudTabs',STATE.cloudCat,allCounts, k=>{STATE.cloudCat=k;renderClouds();});
+    renderCatTabs('mktTabs',  STATE.mktCat,  null,       k=>{STATE.mktCat=k;renderMktTab(k);});
+
+    renderHot(); renderShop();
+
+    const resonance = buildResonance(latest);
+    renderResonance(resonance);
+    const ng = renderNewGone(latest, yesterday);
+    renderTopBar(latest);
+    renderLine(snaps);
+    renderClouds();
+    fillInsight('insightTrend', buildTrendInsight(latest, snaps, resonance, ng));
+    renderNarratives(latest, snaps, resonance, ng);
+    renderMktTab(STATE.mktCat);
+  }catch(err){
+    console.error(err);
+    document.getElementById('hotGrid').innerHTML = `<div class="panel"><div class="panel-title">⚠️ 加载失败</div><div style="color:#c8331f;font-size:13px;margin-top:10px">${escHtml(err.message)}<br/>请确认数据仓库可访问,或稍后刷新。</div></div>`;
+  }
+}
+main();
+</script>
+</body>
+</html>
