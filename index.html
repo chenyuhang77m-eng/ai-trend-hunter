@@ -15,6 +15,7 @@
     --accent:#c8331f;--accent-2:#1a4d3f;--accent-3:#d99c2b;--muted:#605747;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
   html,body{background:var(--paper);color:var(--ink);font-family:"Fraunces","Noto Serif SC",Georgia,serif;-webkit-font-smoothing:antialiased;font-feature-settings:"liga","kern","ss01"}
   body{
     background:radial-gradient(1200px 800px at 100% -10%,rgba(200,51,31,.06),transparent 60%),
@@ -40,6 +41,42 @@
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   .ruleline{height:6px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);background:repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 6px)}
 
+  /* GLOBAL JUMP NAV */
+  .jump-tabs{
+    position:sticky;top:0;z-index:20;
+    display:grid;grid-template-columns:repeat(4,1fr);
+    margin-top:18px;
+    border:1.5px solid var(--ink);
+    background:rgba(244,237,225,.94);backdrop-filter:blur(10px);
+    box-shadow:0 10px 22px rgba(13,12,10,.08);
+  }
+  .jump-tab{
+    min-height:54px;padding:11px 14px;border-right:1px solid var(--ink);
+    color:var(--ink);text-decoration:none;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(227,214,187,.25));
+    display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;
+    transition:background .16s ease,color .16s ease,transform .16s ease;
+  }
+  .jump-tab:last-child{border-right:none}
+  .jump-tab::before{
+    content:"";position:absolute;inset:auto 14px 8px;height:2px;
+    background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .18s ease;
+  }
+  .jump-tab:hover{background:var(--ink);color:var(--paper);transform:translateY(-1px)}
+  .jump-tab:hover::before{transform:scaleX(1);background:var(--accent-3)}
+  .jump-tab .no{
+    font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--accent);
+    border:1px solid currentColor;padding:2px 5px;line-height:1;flex:0 0 auto;
+  }
+  .jump-tab:hover .no{color:var(--accent-3)}
+  .jump-tab .txt{
+    font-family:"Noto Serif SC",serif;font-weight:900;font-size:15px;line-height:1;white-space:nowrap;
+  }
+  .jump-tab .en{
+    font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    margin-left:2px;white-space:nowrap;
+  }
+  .jump-tab:hover .en{color:rgba(244,237,225,.72)}
+
   /* HERO */
   .hero{padding:48px 0 36px;border-bottom:1px solid var(--ink);position:relative}
   .hero-eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:18px;display:flex;align-items:center;gap:14px}
@@ -63,7 +100,7 @@
   .kpi:nth-child(3) .num{color:var(--accent-3)}
 
   /* SECTION */
-  .section{padding:56px 0 8px;border-bottom:1px solid var(--ink)}
+  .section{padding:56px 0 8px;border-bottom:1px solid var(--ink);scroll-margin-top:76px}
   .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--ink);flex-wrap:wrap}
   .section-head .l{display:flex;align-items:baseline;gap:18px}
   .section-num{font-family:"Fraunces",serif;font-weight:900;font-style:italic;font-size:80px;line-height:.8;color:var(--paper);-webkit-text-stroke:1.5px var(--ink)}
@@ -203,6 +240,10 @@
     .editorial .cols{grid-template-columns:1fr}.hero-sub{grid-template-columns:1fr}
     .hero-byline{text-align:left}.insight{grid-template-columns:80px 1fr}.insight .tag .t2{font-size:24px}
     .cat-tabs .tab{min-width:80px;padding:10px 8px;font-size:12px}
+    .jump-tabs{display:flex;overflow-x:auto;scrollbar-width:none}
+    .jump-tabs::-webkit-scrollbar{display:none}
+    .jump-tab{min-width:150px;justify-content:flex-start}
+    .jump-tab .en{display:none}
   }
 </style>
 </head>
@@ -244,12 +285,19 @@
       <div class="kpi"><div class="label">Platforms</div><div class="num" id="kpi-platform">--</div><div class="unit">在监测平台/榜单数</div></div>
       <div class="kpi"><div class="label">Hot Items</div><div class="num" id="kpi-items">--</div><div class="unit">当日上榜词条总数</div></div>
       <div class="kpi"><div class="label">Resonance</div><div class="num" id="kpi-shared">--</div><div class="unit">跨平台共振词数量</div></div>
-      <div class="kpi"><div class="label">Newcomers</div><div class="num" id="kpi-new">--</div><div class="unit">今日新晋商品/品牌(电商)</div></div>
+      <div class="kpi"><div class="label">Newcomers</div><div class="num" id="kpi-new">--</div><div class="unit">连续3天上榜商品/品牌</div></div>
     </div>
+
+    <nav class="jump-tabs" aria-label="页面分区导航">
+      <a class="jump-tab" href="#hot-section"><span class="no">01</span><span class="txt">热搜榜</span><span class="en">Search</span></a>
+      <a class="jump-tab" href="#shop-section"><span class="no">02</span><span class="txt">热销榜</span><span class="en">Commerce</span></a>
+      <a class="jump-tab" href="#trend-section"><span class="no">03</span><span class="txt">趋势分析</span><span class="en">Trend</span></a>
+      <a class="jump-tab" href="#mkt-section"><span class="no">04</span><span class="txt">营销建议</span><span class="en">Playbook</span></a>
+    </nav>
   </header>
 
   <!-- ===== SECTION 01 : HOT SEARCH ===== -->
-  <section class="section">
+  <section class="section" id="hot-section">
     <div class="section-head">
       <div class="l">
         <div class="section-num">01</div>
@@ -265,7 +313,7 @@
   </section>
 
   <!-- ===== SECTION 02 : SHOPPING ===== -->
-  <section class="section">
+  <section class="section" id="shop-section">
     <div class="section-head">
       <div class="l">
         <div class="section-num">02</div>
@@ -281,7 +329,7 @@
   </section>
 
   <!-- ===== SECTION 03 : TREND ANALYSIS ===== -->
-  <section class="section">
+  <section class="section" id="trend-section">
     <div class="section-head">
       <div class="l">
         <div class="section-num">03</div>
@@ -306,8 +354,8 @@
     </div>
 
     <div class="trend-grid two">
-      <div class="pcard"><div class="pcard-head"><h3>🚀 今日新晋商品/品牌</h3><div class="meta">仅电商榜 · 昨日未上榜</div></div><div class="kv-list" id="newList"></div></div>
-      <div class="pcard"><div class="pcard-head"><h3>💨 今日退榜商品/品牌</h3><div class="meta">仅电商榜 · 昨日有,今日无</div></div><div class="kv-list" id="goneList"></div></div>
+      <div class="pcard"><div class="pcard-head"><h3>🚀 3日新晋商品/品牌</h3><div class="meta">仅电商榜 · 连续3天上榜</div></div><div class="kv-list" id="newList"></div></div>
+      <div class="pcard"><div class="pcard-head"><h3>💨 3日退榜商品/品牌</h3><div class="meta">仅电商榜 · 最近3天未上榜,此前在榜</div></div><div class="kv-list" id="goneList"></div></div>
     </div>
 
     <div class="trend-grid full">
@@ -353,7 +401,7 @@
   </section>
 
   <!-- ===== SECTION 04 : MARKETING PLAYBOOK ===== -->
-  <section class="section">
+  <section class="section" id="mkt-section">
     <div class="section-head">
       <div class="l">
         <div class="section-num">04</div>
@@ -596,9 +644,9 @@ function renderResonance(data){
   if(!data.length){el.innerHTML='<div class="kv"><span class="idx">—</span><span class="l">暂无跨平台共振词</span><span class="r"></span></div>';return;}
   el.innerHTML = data.map(([k,v],i)=>`<div class="kv"><span class="idx">${String(i+1).padStart(2,'0')}</span><span class="l">${escHtml(k)}</span><span class="r">${v.count}平台·${fmtBig(v.metric)}</span></div>`).join('');
 }
-function renderNewGone(today, yesterday){
+function renderNewGone(snaps){
   // 商品维度:仅取电商榜单(category===shopping),用品牌+卖点 token 作为商品标识(粒度更细)
-  const extractProducts = (snap)=>{
+  const extractProducts = (snap, date)=>{
     const m = new Map();  // brand/selling token -> max metric (作为热度)
     (snap?.lists||[]).filter(l=>l.category==='shopping').forEach(l=>{
       l.items.forEach(it=>{
@@ -608,19 +656,49 @@ function renderNewGone(today, yesterday){
         const sellings = dictExtract(it.title, PRODUCT_SELLING.sort((a,b)=>b.length-a.length));
         const tokens = brands.length ? brands : sellings.slice(0,2);
         tokens.forEach(t=>{
-          if(!m.has(t)||v>m.get(t).value) m.set(t,{value:v, sample:it.title, type: PRODUCT_BRANDS.includes(t)?'brand':'selling'});
+          if(!m.has(t)||v>m.get(t).value) m.set(t,{value:v, sample:it.title, date, type: PRODUCT_BRANDS.includes(t)?'brand':'selling'});
         });
       });
     });
     return m;
   };
-  const todayMap = extractProducts(today);
-  const yMap = extractProducts(yesterday);
-  const todaySet = new Set(todayMap.keys());
-  const ySet = new Set(yMap.keys());
 
-  const newOnes = [...todaySet].filter(x=>!ySet.has(x));
-  const gone   = [...ySet].filter(x=>!todaySet.has(x));
+  const mergeProducts = (snaps)=>{
+    const m = new Map();
+    snaps.forEach(({date,snap})=>{
+      extractProducts(snap, date).forEach((info, token)=>{
+        const cur = m.get(token);
+        if(!cur){
+          m.set(token, {...info, days: new Set([date])});
+          return;
+        }
+        cur.days.add(date);
+        if(info.value > cur.value){
+          cur.value = info.value;
+          cur.sample = info.sample;
+          cur.date = info.date;
+          cur.type = info.type;
+        }
+      });
+    });
+    m.forEach(info=>{info.dayCount = info.days.size; delete info.days;});
+    return m;
+  };
+
+  const validSnaps = (snaps||[]).filter(x=>x?.snap);
+  const recentSnaps = validSnaps.slice(-3);
+  const earlierSnaps = validSnaps.slice(0, -3);
+  const recentMaps = recentSnaps.map(({date,snap})=>extractProducts(snap, date));
+  const recentSets = recentMaps.map(m=>new Set(m.keys()));
+  const recentMap = mergeProducts(recentSnaps);
+  const earlierMap = mergeProducts(earlierSnaps);
+  const earlierSet = new Set(earlierMap.keys());
+
+  const hasThreeDayWindow = recentSets.length >= 3;
+  const newOnes = hasThreeDayWindow
+    ? [...recentSets[recentSets.length-1]].filter(x=>recentSets.every(s=>s.has(x)))
+    : [];
+  const gone = [...earlierSet].filter(x=>!recentSets.some(s=>s.has(x)));
 
   // KPI: 用商品新晋数
   document.getElementById('kpi-new').textContent = newOnes.length;
@@ -630,17 +708,17 @@ function renderNewGone(today, yesterday){
     return `${token} <span style="color:#1a4d3f;font-size:10px;font-family:JetBrains Mono">[${tag}]</span>`;
   };
 
-  const newSorted  = newOnes.map(k=>[k, todayMap.get(k)]).sort((a,b)=>b[1].value-a[1].value).slice(0,10);
-  const goneSorted = gone.map(k=>[k, yMap.get(k)]).sort((a,b)=>b[1].value-a[1].value).slice(0,10);
+  const newSorted  = newOnes.map(k=>[k, recentMap.get(k)]).sort((a,b)=>b[1].value-a[1].value).slice(0,10);
+  const goneSorted = gone.map(k=>[k, earlierMap.get(k)]).sort((a,b)=>b[1].value-a[1].value).slice(0,10);
 
   document.getElementById('newList').innerHTML = newSorted.length
-    ? newSorted.map(([k,info],i)=>`<div class="kv"><span class="idx">${String(i+1).padStart(2,'0')}</span><span class="l" title="${escHtml(info.sample)}">${fmt(escHtml(k),info)}</span><span class="r">${fmtBig(info.value)}</span></div>`).join('')
-    : '<div class="kv"><span class="idx">—</span><span class="l">首日数据/无对比</span><span class="r"></span></div>';
+    ? newSorted.map(([k,info],i)=>`<div class="kv"><span class="idx">${String(i+1).padStart(2,'0')}</span><span class="l" title="${escHtml(info.sample)}">${fmt(escHtml(k),info)}</span><span class="r">3日峰值${fmtBig(info.value)}</span></div>`).join('')
+    : `<div class="kv"><span class="idx">—</span><span class="l">${hasThreeDayWindow?'暂无连续3天上榜商品':'不足3天数据/无对比'}</span><span class="r"></span></div>`;
   document.getElementById('goneList').innerHTML = goneSorted.length
-    ? goneSorted.map(([k,info],i)=>`<div class="kv"><span class="idx">${String(i+1).padStart(2,'0')}</span><span class="l" title="${escHtml(info.sample)}">${fmt(escHtml(k),info)}</span><span class="r">昨${fmtBig(info.value)}</span></div>`).join('')
+    ? goneSorted.map(([k,info],i)=>`<div class="kv"><span class="idx">${String(i+1).padStart(2,'0')}</span><span class="l" title="${escHtml(info.sample)}">${fmt(escHtml(k),info)}</span><span class="r">此前峰值${fmtBig(info.value)}</span></div>`).join('')
     : '<div class="kv"><span class="idx">—</span><span class="l">无退榜商品</span><span class="r"></span></div>';
 
-  return {newCount:newOnes.length, goneCount:gone.length};
+  return {newCount:newOnes.length, goneCount:gone.length, baselineDays:earlierSnaps.length, recentDays:recentSnaps.length};
 }
 function renderTopBar(latest){
   const arr=[];latest.lists.forEach(l=>l.items.forEach(it=>arr.push({title:it.title,metric:parseMetric(it.metric),src:l.sourceName})));
@@ -999,7 +1077,7 @@ function renderNarratives(latest, snaps, resonance, ng){
   const hotItems = totalItems - shopItems;
   let n2 = `近 <b>${days}</b> 天走势图揭示一个规律:工作日舆情型平台(微博、百度)放量明显,周末电商榜单上扬。`;
   n2 += `今日热搜 <b>${hotItems}</b> 条 vs 电商热销 <b>${shopItems}</b> 条,${hotItems>shopItems?'舆情更活跃,适合做<em>事件型借势营销</em>。':'电商榜更密集,购物决策窗口正在打开,适合做<em>转化型场景投放</em>。'}`;
-  n2 += `结合"今日新晋商品/品牌"(<b>${ng.newCount}</b>)与"退榜商品"(<b>${ng.goneCount}</b>),可以从电商货架的<em>SKU 进出</em>识别真实购买力的流向。`;
+  n2 += `结合"3日新晋商品/品牌"(<b>${ng.newCount}</b>)与"3日退榜商品/品牌"(<b>${ng.goneCount}</b>),可以从电商货架的<em>SKU 进出</em>识别真实购买力的流向。`;
   document.getElementById('narr1').innerHTML = n1;
   document.getElementById('narr2').innerHTML = n2;
 }
@@ -1188,7 +1266,6 @@ async function main(){
       try{return {date:d,snap:await getJSON(dayUrl(d))}}catch(e){return {date:d,snap:null}}
     }));
     const latest = snaps[snaps.length-1].snap;
-    const yesterday = snaps.length>=2 ? snaps[snaps.length-2].snap : null;
     document.getElementById('capAt').textContent = ago(latest?.capturedAt);
     document.getElementById('kpi-platform').textContent = latest.lists.length;
     document.getElementById('kpi-items').textContent = latest.lists.reduce((s,l)=>s+l.items.length,0);
@@ -1213,7 +1290,7 @@ async function main(){
 
     const resonance = buildResonance(latest);
     renderResonance(resonance);
-    const ng = renderNewGone(latest, yesterday);
+    const ng = renderNewGone(snaps);
     renderTopBar(latest);
     renderLine(snaps);
     renderClouds();
