@@ -1319,8 +1319,9 @@ function pickRowSignals(row, signals, rowIndex){
     .map(it=>({it, score:scoreRowItem(row,it)}))
     .sort((a,b)=>b.score-a.score);
   const matched = scored.filter(x=>isRowHit(row, x.it)).map(x=>x.it);
-  const pool = matched.length ? matched : signals.all.slice(rowIndex, rowIndex+4).concat(signals.all.slice(0,4));
-  return uniqItems(pool, 4);
+  // 关键修复:命中不到本 row 的 sub/topics 时,**不再用全类目 topSignal 漫灌**,直接返回空
+  // 让上游决策"今日本 sub 暂无强信号"的常青策略,避免跨 sub 串话(如 K12 行被塞美团/携程)
+  return uniqItems(matched, 4);
 }
 
 function channelForCat(catKey){
@@ -1356,19 +1357,24 @@ function buildDynamicMktRows(catKey){
       const signals = mktSignals(catKey);
       const picked = pickRowSignals(row, signals, idx);
       const pickedLabels = uniqList(picked.flatMap(topicLabelFromItem), 8);
+      // 修复:不再把 signals.labels(全类目漫灌)塞进每个 row 的 topics,避免跨 sub 串话
       const topics = uniqList([
         ...pickedLabels,
-        ...uniqList((row.topics||[]).flatMap(t=>extractTopicPhrases(t, 3)), 8),
-        ...signals.labels
+        ...uniqList((row.topics||[]).flatMap(t=>extractTopicPhrases(t, 3)), 8)
       ], 5);
       const scenes = inferScenes(catKey, row, topics).slice(0,5);
-      const topHot = picked.find(x=>x.listCategory==='hot-search') || signals.topHot;
-      const topShop = picked.find(x=>x.listCategory==='shopping') || signals.topShop;
-      const hookText = topics.length ? `围绕 <em>${escHtml(topics.slice(0,2).join(' / '))}</em> 做首屏钩子` : '围绕品类常青需求做低噪声触达';
-      const hotText = topHot ? `热搜侧优先承接「${escHtml(topHot.title)}」` : '热搜侧以轻量内容占位';
-      const shopText = topShop ? `货架侧承接「${escHtml(topShop.title)}」的转化诉求` : '货架侧先用品类通用卖点承接';
-      const action = topShop ? actionForMode(signals.mode) : '先抢短视频与图文解释权,把高互动评论沉淀成次日商品卡卖点';
-      const strategy = `${hookText}，场景主打 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>。${hotText}，${shopText}。建议<b>${action}</b>，内容结构采用「场景切入 + 热点钩子 + 商品证明」三段式，在 ${channelForCat(catKey)} 做分发，并把高互动问答复用到直播间标题、搜索词和商品卡卖点。`;
+      const topHot = picked.find(x=>x.listCategory==='hot-search');
+      const topShop = picked.find(x=>x.listCategory==='shopping');
+      const hasSignal = picked.length > 0;
+      const hookText = hasSignal && topics.length
+        ? `围绕 <em>${escHtml(topics.slice(0,2).join(' / '))}</em> 做首屏钩子`
+        : `围绕「<em>${escHtml(row.sub)}</em>」常青场景做低噪声触达`;
+      const hotText = topHot ? `热搜侧优先承接「${escHtml(topHot.title)}」` : '热搜侧今日无强相关信号,以轻量内容占位';
+      const shopText = topShop ? `货架侧承接「${escHtml(topShop.title)}」的转化诉求` : '货架侧今日无强相关 SKU,先用品类通用卖点承接';
+      const action = (hasSignal && topShop) ? actionForMode(signals.mode) : '保持小预算 A/B 素材测试,沉淀真实评论需求,避免强行关联无关热点';
+      const strategy = hasSignal
+        ? `${hookText}，场景主打 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>。${hotText}，${shopText}。建议<b>${action}</b>，内容结构采用「场景切入 + 热点钩子 + 商品证明」三段式，在 ${channelForCat(catKey)} 做分发，并把高互动问答复用到直播间标题、搜索词和商品卡卖点。`
+        : `今日「<em>${escHtml(row.sub)}</em>」暂无强榜单信号,建议围绕 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b> 做常青内容测试。${hotText}，${shopText}。建议<b>${action}</b>，内容形式以「场景切入 + 用户证言」为主,投放阵地:${channelForCat(catKey)}。等明日热点信号出现后再决定是否放大。`;
       return {...row, scenes, topics, strategy, _livePicked:picked};
     });
   }
@@ -1386,16 +1392,22 @@ function buildDynamicMktRows(catKey){
   return selectedRows.map(({row, idx})=>{
     const picked = pickRowSignals(row, signals, idx);
     const pickedLabels = uniqList(picked.flatMap(topicLabelFromItem), 8);
-    const topics = uniqList([...pickedLabels, ...signals.labels, ...(row.topics||[])], 5);
+    // 修复:不再把 signals.labels(全类目漫灌)塞进 row.topics
+    const topics = uniqList([...pickedLabels, ...(row.topics||[])], 5);
     const scenes = inferScenes(catKey, row, topics).slice(0,5);
-    const topHot = picked.find(x=>x.listCategory==='hot-search' && isRowHit(row, x)) || signals.topHot;
+    const topHot = picked.find(x=>x.listCategory==='hot-search' && isRowHit(row, x));
     const topShop = picked.find(x=>x.listCategory==='shopping' && isRowHit(row, x));
+    const hasSignal = picked.length > 0;
     const sourceText = signals.platforms.length ? signals.platforms.join(' / ') : '暂无高热平台';
-    const hotText = topHot ? `热搜「${escHtml(topHot.title)}」(${escHtml(topHot.src)} ${escHtml(topHot.metric||'')})` : '热搜侧暂无强信号';
-    const shopText = topShop ? `热销「${escHtml(topShop.title)}」(${escHtml(topShop.src)} ${escHtml(topShop.metric||'')})` : '电商侧暂无强关联 SKU,先用榜单话题试探需求';
-    const hook = topics.length ? `今日优先围绕「<em>${escHtml(topics.slice(0,2).join(' / '))}</em>」做短内容钩子` : '今日以品类常青需求做低噪声触达';
-    const action = topShop ? actionForMode(signals.mode) : '先抢短视频与图文解释权,把互动最高的评论问题沉淀成次日商品卡卖点';
-    const strategy = `${hook}，场景聚焦 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>，结合${hotText}与${shopText}。建议<b>${action}</b>，内容形式用「榜单解读 + 场景清单 + 达人实测」三段式，投放阵地:${channelForCat(catKey)}。监测 ${sourceText} 的互动变化，次日把高互动话题复用到直播间标题、搜索词和商品卡卖点。`;
+    const hotText = topHot ? `热搜「${escHtml(topHot.title)}」(${escHtml(topHot.src)} ${escHtml(topHot.metric||'')})` : '热搜侧今日无强相关信号';
+    const shopText = topShop ? `热销「${escHtml(topShop.title)}」(${escHtml(topShop.src)} ${escHtml(topShop.metric||'')})` : '电商侧今日无强相关 SKU,先用榜单话题试探需求';
+    const hook = hasSignal && topics.length
+      ? `今日优先围绕「<em>${escHtml(topics.slice(0,2).join(' / '))}</em>」做短内容钩子`
+      : `今日「<em>${escHtml(row.sub)}</em>」暂无强信号,以常青需求做低噪声触达`;
+    const action = (hasSignal && topShop) ? actionForMode(signals.mode) : '保持小预算 A/B 素材测试,沉淀真实评论需求,避免强行关联无关热点';
+    const strategy = hasSignal
+      ? `${hook}，场景聚焦 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>，结合${hotText}与${shopText}。建议<b>${action}</b>，内容形式用「榜单解读 + 场景清单 + 达人实测」三段式，投放阵地:${channelForCat(catKey)}。监测 ${sourceText} 的互动变化，次日把高互动话题复用到直播间标题、搜索词和商品卡卖点。`
+      : `${hook}，场景聚焦 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>。${hotText}；${shopText}。建议<b>${action}</b>，内容形式以「场景切入 + 用户证言」为主,投放阵地:${channelForCat(catKey)}。等明日相关信号出现后再决定是否放大投放。`;
     return {...row, scenes, topics, strategy, _livePicked:picked};
   });
 }
