@@ -225,6 +225,8 @@
   .mkt-scene{display:flex;flex-wrap:wrap;gap:8px}
   .mkt-scene .chip{font-family:"Noto Serif SC",serif;font-size:12px;letter-spacing:.01em;background:rgba(26,77,63,.08);color:var(--accent-2);padding:5px 10px;border:1px solid rgba(26,77,63,.18);font-weight:700;border-radius:999px}
   .mkt-topics{display:flex;flex-wrap:wrap;gap:8px}
+  .mkt-chip-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%}
+  .mkt-chip-group b{font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--muted);min-width:28px}
   .mkt-topics .chip{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.04em;background:#f6f1e8;color:var(--muted);padding:4px 9px;border:1px solid rgba(13,12,10,.22);font-weight:700;border-radius:999px;box-shadow:inset 0 -1px 0 rgba(13,12,10,.06)}
   .mkt-topics .chip.live{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 10px rgba(200,51,31,.18)}
   .mkt-topics .chip:not(.live){background:linear-gradient(180deg,#f6efe3,#ece2cf)}
@@ -1347,38 +1349,16 @@ function actionForMode(mode){
 function buildDynamicMktRows(catKey){
   const llmCat = STATE.llmInsights?.content?.categories?.[catKey];
   if(llmCat?.rows?.length){
-    return llmCat.rows.map((r, idx)=>{
-      const row = {
-        sub:r.sub,
-        scene:r.scene,
-        topics:Array.isArray(r.topics)?r.topics:[],
-        strategy:r.strategy
-      };
-      const signals = mktSignals(catKey);
-      const picked = pickRowSignals(row, signals, idx);
-      const pickedLabels = uniqList(picked.flatMap(topicLabelFromItem), 8);
-      // 修复:不再把 signals.labels(全类目漫灌)塞进每个 row 的 topics,避免跨 sub 串话
-      const topics = uniqList([
-        ...pickedLabels,
-        ...uniqList((row.topics||[]).flatMap(t=>extractTopicPhrases(t, 3)), 8)
-      ], 5);
-      const scenes = inferScenes(catKey, row, topics).slice(0,5);
-      const topHot = picked.find(x=>x.listCategory==='hot-search');
-      const topShop = picked.find(x=>x.listCategory==='shopping');
-      const hasSignal = picked.length > 0;
-      const hookText = hasSignal && topics.length
-        ? `围绕 <em>${escHtml(topics.slice(0,2).join(' / '))}</em> 做首屏钩子`
-        : `围绕「<em>${escHtml(row.sub)}</em>」常青场景做低噪声触达`;
-      const hotText = topHot ? `热搜侧优先承接「${escHtml(topHot.title)}」` : '热搜侧今日无强相关信号,以轻量内容占位';
-      const shopText = topShop ? `货架侧承接「${escHtml(topShop.title)}」的转化诉求` : '货架侧今日无强相关 SKU,先用品类通用卖点承接';
-      const action = (hasSignal && topShop) ? actionForMode(signals.mode) : '保持小预算 A/B 素材测试,沉淀真实评论需求,避免强行关联无关热点';
-      const strategy = hasSignal
-        ? `${hookText}，场景主打 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>。${hotText}，${shopText}。建议<b>${action}</b>，内容结构采用「场景切入 + 热点钩子 + 商品证明」三段式，在 ${channelForCat(catKey)} 做分发，并把高互动问答复用到直播间标题、搜索词和商品卡卖点。`
-        : `今日「<em>${escHtml(row.sub)}</em>」暂无强榜单信号,建议围绕 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b> 做常青内容测试。${hotText}，${shopText}。建议<b>${action}</b>，内容形式以「场景切入 + 用户证言」为主,投放阵地:${channelForCat(catKey)}。等明日热点信号出现后再决定是否放大。`;
-      return {...row, scenes, topics, strategy, _livePicked:picked};
-    });
+    return llmCat.rows.map(r=>({
+      sub:r.sub,
+      scene:r.scene,
+      hotTerms:Array.isArray(r.hotTerms)?r.hotTerms.slice(0,5):[],
+      topicIdeas:Array.isArray(r.topicIdeas)?r.topicIdeas.slice(0,5):[],
+      topics:Array.isArray(r.topicIdeas)&&r.topicIdeas.length?r.topicIdeas.slice(0,5):(Array.isArray(r.topics)?r.topics.slice(0,5):[]),
+      strategy:r.strategy,
+      _plain:true
+    }));
   }
-
   const baseRows = MKT_PLAYBOOK[catKey] || [];
   const signals = mktSignals(catKey);
   if(!baseRows.length) return [];
@@ -1470,8 +1450,8 @@ function renderMktTable(rows, isAll){
   // 把今日实际命中的话题(出现在 latest 数据里)用 .live 高亮
   const liveTopics = collectLiveTopics();
   const head = isAll
-    ? `<div class="mkt-row head"><div>品类 / 二级</div><div>营销场景</div><div>话题钩子</div><div>投放策略</div></div>`
-    : `<div class="mkt-row head"><div>二级品类</div><div>营销场景</div><div>话题钩子</div><div>投放策略</div></div>`;
+    ? `<div class="mkt-row head"><div>品类 / 二级</div><div>营销场景</div><div>热点词 / 话题词</div><div>投放策略</div></div>`
+    : `<div class="mkt-row head"><div>二级品类</div><div>营销场景</div><div>热点词 / 话题词</div><div>投放策略</div></div>`;
   const body = rows.map(r=>{
     const subText = isAll
       ? `<div class="mkt-sub">${escHtml(r._cat)}<small>${escHtml(r.sub)}</small></div>`
@@ -1480,12 +1460,20 @@ function renderMktTable(rows, isAll){
       ? r.scenes.slice(0,5)
       : (r.scene ? extractTopicPhrases(r.scene, 5) : []);
     const sceneChips = sceneList.map(s=>`<span class="chip">${escHtml(s)}</span>`).join('');
-    const topicList = Array.isArray(r.topics) ? r.topics.slice(0,5) : [];
-    const chips = topicList.map(t=>{
+    const hotTerms = Array.isArray(r.hotTerms) ? r.hotTerms : [];
+    const topicIdeas = Array.isArray(r.topicIdeas) && r.topicIdeas.length ? r.topicIdeas : (Array.isArray(r.topics) ? r.topics.slice(0,5) : []);
+    const hotChips = hotTerms.map(t=>{
       const live = liveTopics.has(t) || (r._livePicked||[]).some(x=>(x.title||'').includes(t) || t.includes(x.title||'__never__'));
       return `<span class="chip ${live?'live':''}">${escHtml(t)}</span>`;
     }).join('');
-    const strategy = r.strategy;
+    const ideaChips = topicIdeas.map(t=>{
+      const live = liveTopics.has(t) || (r._livePicked||[]).some(x=>(x.title||'').includes(t) || t.includes(x.title||'__never__'));
+      return `<span class="chip ${live?'live':''}">${escHtml(t)}</span>`;
+    }).join('');
+    const chips = hotTerms.length
+      ? `<div class="mkt-chip-group"><b>??</b>${hotChips}</div><div class="mkt-chip-group"><b>??</b>${ideaChips}</div>`
+      : ideaChips;
+    const strategy = r._plain ? escHtml(r.strategy) : r.strategy;
     return `<div class="mkt-row">
       <div data-label="品类">${subText}</div>
       <div data-label="场景"><div class="mkt-scene">${sceneChips}</div></div>
