@@ -427,6 +427,7 @@
 /* ============ DATA SOURCES ============ */
 const REPO_BASE = 'https://raw.githubusercontent.com/chenyuhang77m-eng/top-rank-tracker/main';
 const URL_INDEX  = REPO_BASE + '/data/index.json';
+const URL_INSIGHTS = REPO_BASE + '/data/insights/latest.json';
 const dayUrl = (d)=> REPO_BASE + `/data/${d}.json`;
 
 /* ============ 8 大品类(用户体系) ============ */
@@ -489,6 +490,7 @@ const STATE = {
   latest:null, snapshots:[],
   hotCat:'ALL', shopCat:'ALL', cloudCat:'ALL', mktCat:'C3',
   hotLists:[], shopLists:[],
+  llmInsights:null,
 };
 
 /* ============ CATEGORY TAB BAR ============ */
@@ -1195,16 +1197,199 @@ const MKT_PLAYBOOK = {
   ],
 };
 
+function getDailyItems(catKey, kind='all'){
+  const sourceLists = kind==='hot' ? STATE.hotLists : kind==='shop' ? STATE.shopLists : [...(STATE.hotLists||[]), ...(STATE.shopLists||[])];
+  const rows = [];
+  sourceLists.forEach(l=>l.items.forEach(it=>{
+    const itemCat = categorize(it.title);
+    if(catKey!=='ALL' && itemCat!==catKey) return;
+    rows.push({
+      ...it,
+      src:l.sourceName,
+      listName:l.listName,
+      listCategory:l.category,
+      cat:itemCat,
+      val:parseMetric(it.metric)
+    });
+  }));
+  rows.sort((a,b)=>b.val-a.val);
+  return rows;
+}
+
+function topicLabelFromItem(it){
+  const title = it?.title || '';
+  const dictHits = [
+    ...dictExtract(title, TOPIC_LIST),
+    ...dictExtract(title, PRODUCT_LIST)
+  ];
+  const labels = dictHits.length ? dictHits : [title];
+  return labels
+    .map(x=>String(x).trim())
+    .filter(x=>x.length>=2)
+    .map(x=>x.length>18 ? x.slice(0,18)+'…' : x);
+}
+
+function uniqList(arr, n=5){
+  const seen = new Set();
+  const out = [];
+  arr.forEach(x=>{
+    const key = String(x||'').toLowerCase().replace(/\s+/g,'');
+    if(!key || seen.has(key)) return;
+    seen.add(key); out.push(x);
+  });
+  return out.slice(0,n);
+}
+
+function uniqItems(arr, n=5){
+  const seen = new Set();
+  const out = [];
+  arr.forEach(x=>{
+    const key = `${x?.src||''}:${x?.title||''}`;
+    if(!x || !x.title || seen.has(key)) return;
+    seen.add(key); out.push(x);
+  });
+  return out.slice(0,n);
+}
+
+function mktSignals(catKey){
+  const hot = getDailyItems(catKey, 'hot').slice(0,20);
+  const shop = getDailyItems(catKey, 'shop').slice(0,20);
+  const all = [...hot, ...shop].sort((a,b)=>b.val-a.val);
+  const labels = uniqList(all.flatMap(topicLabelFromItem), 12);
+  const platforms = uniqList(all.map(x=>x.src), 6);
+  const mode = hot.length && shop.length
+    ? '话题与购买同频'
+    : hot.length ? '舆论热度优先'
+    : shop.length ? '货架转化优先'
+    : '低噪声观察期';
+  return {hot, shop, all, labels, platforms, mode, top:all[0], topHot:hot[0], topShop:shop[0]};
+}
+
+function scoreRowItem(row, it){
+  const title = it.title || '';
+  const keys = uniqList([row.sub, ...(row.topics||[])], 20);
+  const hit = keys.reduce((s,k)=>s+(title.includes(k)?3:0),0);
+  const subHit = row.sub && title.includes(row.sub.replace(/\s|\/|×/g,'')) ? 2 : 0;
+  return hit + subHit + Math.log10((it.val||1)+10);
+}
+
+function isRowHit(row, it){
+  return scoreRowItem(row, it) > Math.log10((it.val||1)+10);
+}
+
+function pickRowSignals(row, signals, rowIndex){
+  const scored = signals.all
+    .map(it=>({it, score:scoreRowItem(row,it)}))
+    .sort((a,b)=>b.score-a.score);
+  const matched = scored.filter(x=>isRowHit(row, x.it)).map(x=>x.it);
+  const pool = matched.length ? matched : signals.all.slice(rowIndex, rowIndex+4).concat(signals.all.slice(0,4));
+  return uniqItems(pool, 4);
+}
+
+function channelForCat(catKey){
+  return {
+    C3:'抖音科技榜、B站测评区、知乎数码问答、小红书新品种草',
+    HOME:'小红书家居笔记、抖音家装案例、视频号本地生活、京东家装会场',
+    APPL:'抖音家电榜、京东/天猫品类日、小红书真实长测、视频号家庭场景',
+    BABY:'小红书母婴圈、抖音育儿达人、宝宝树/有赞母婴、京东母婴会场',
+    FOOD:'抖音美食榜、小红书便利店/办公室零食、视频号本地达人、京东食品会场',
+    BEAU:'小红书成分党、抖音美妆测评、视频号皮肤管理、B站妆造区',
+    CLOT:'小红书穿搭/户外、抖音穿搭达人、视频号女性圈层、天猫服饰会场',
+    EDU:'小红书家长/本地生活、抖音教育/同城、知乎问答、私域社群'
+  }[catKey] || '抖音、小红书、视频号、京东/天猫品类会场';
+}
+
+function actionForMode(mode){
+  if(mode==='话题与购买同频') return '先用热搜词做内容钩子,再把热销 SKU 或品牌作为承接页主卖点';
+  if(mode==='舆论热度优先') return '先抢短视频与图文解释权,用评论区/私信收集需求后再导入转化';
+  if(mode==='货架转化优先') return '直接放大价格、功能和场景利益点,把榜单商品做成可购买清单';
+  return '保持轻量内容占位,用低成本 A/B 素材测试哪类人群先响应';
+}
+
+function buildDynamicMktRows(catKey){
+  const llmCat = STATE.llmInsights?.content?.categories?.[catKey];
+  if(llmCat?.rows?.length){
+    return llmCat.rows.map(r=>({
+      sub:r.sub,
+      scene:r.scene,
+      topics:Array.isArray(r.topics)?r.topics.slice(0,6):[],
+      strategy:r.strategy,
+      _plain:true
+    }));
+  }
+
+  const baseRows = MKT_PLAYBOOK[catKey] || [];
+  const signals = mktSignals(catKey);
+  if(!baseRows.length) return [];
+  const scoreBaseRow = row => signals.all.reduce((sum,it)=>sum+(isRowHit(row,it)?Math.log10((it.val||1)+10):0),0);
+  const scoredBaseRows = baseRows.map((row, idx)=>({row, idx, score:scoreBaseRow(row)}));
+  const hasHits = scoredBaseRows.some(x=>x.score>0);
+  const selectedRows = hasHits
+    ? scoredBaseRows.filter(x=>x.score>0).sort((a,b)=>b.score-a.score || a.idx-b.idx)
+    : scoredBaseRows.slice(0,4);
+
+  return selectedRows.map(({row, idx})=>{
+    const picked = pickRowSignals(row, signals, idx);
+    const pickedLabels = picked.flatMap(topicLabelFromItem);
+    const topics = uniqList([...pickedLabels, ...signals.labels, ...(row.topics||[])], 5);
+    const topHot = picked.find(x=>x.listCategory==='hot-search' && isRowHit(row, x)) || signals.topHot;
+    const topShop = picked.find(x=>x.listCategory==='shopping' && isRowHit(row, x));
+    const main = picked[0] || signals.top || {};
+    const sourceText = signals.platforms.length ? signals.platforms.join(' / ') : '暂无高热平台';
+    const scene = `${row.scene} · ${signals.mode}`;
+    const hotText = topHot ? `热搜「${escHtml(topHot.title)}」(${escHtml(topHot.src)} ${escHtml(topHot.metric||'')})` : '热搜侧暂无强信号';
+    const shopText = topShop ? `热销「${escHtml(topShop.title)}」(${escHtml(topShop.src)} ${escHtml(topShop.metric||'')})` : '电商侧暂无强关联 SKU,先用榜单话题试探需求';
+    const hook = main.title ? `今日优先借势「<em>${escHtml(main.title)}</em>」` : '今日以品类常青需求做低噪声触达';
+    const action = topShop ? actionForMode(signals.mode) : '先抢短视频与图文解释权,把互动最高的评论问题沉淀成次日商品卡卖点';
+    const strategy = `${hook},结合${hotText}与${shopText}。建议<b>${action}</b>,内容形式用「榜单解读 + 场景清单 + 达人实测」三段式,投放阵地:${channelForCat(catKey)}。监测 ${sourceText} 的互动变化,次日把高互动话题复用到直播间标题、搜索词和商品卡卖点。`;
+    return {...row, scene, topics, strategy, _livePicked:picked};
+  });
+}
+
+function buildMktInsight(catKey){
+  const llm = STATE.llmInsights?.content;
+  if(catKey==='ALL' && llm?.summary){
+    return {lead:escHtml(llm.summary.lead), items:(llm.summary.bullets||[]).map(escHtml)};
+  }
+  const llmCat = llm?.categories?.[catKey];
+  if(llmCat){
+    return {lead:escHtml(llmCat.lead), items:(llmCat.bullets||[]).map(escHtml)};
+  }
+
+  const signals = mktSignals(catKey);
+  const catName = CAT_BY_KEY[catKey]?.name || '全部';
+  if(catKey==='ALL'){
+    const rankedCats = CAT_KEYS.filter(k=>k!=='ALL').map(k=>{
+      const s = mktSignals(k);
+      return {k, name:CAT_BY_KEY[k].name, count:s.all.length, top:s.top};
+    }).filter(x=>x.count).sort((a,b)=>b.count-a.count).slice(0,4);
+    const lead = rankedCats.length
+      ? `今日营销建议已按实时榜单重算。声量最高的品类是 <b>${escHtml(rankedCats[0].name)}</b>,代表信号为 <em>「${escHtml(rankedCats[0].top.title)}」</em>;下方每个品类展示一条最适合今天先执行的动作。`
+      : `今日榜单暂未命中明确消费品类,建议先观察全网大事件,避免强行关联商品。`;
+    return {lead, items: rankedCats.map(x=>`${x.name}:${x.count} 条信号`)};
+  }
+  if(!signals.all.length){
+    return {lead:`「${escHtml(catName)}」今日没有明显热搜或热销信号,营销建议会回到常青场景,适合小预算素材测试与私域维护。`, items:[]};
+  }
+  const lead = `「${escHtml(catName)}」今日识别到 <b>${signals.hot.length}</b> 条热搜话题与 <b>${signals.shop.length}</b> 条热销 SKU,判断为 <em>${signals.mode}</em>。建议围绕 <b>${signals.labels.slice(0,3).map(escHtml).join('、')}</b> 做首轮内容钩子。`;
+  return {lead, items:[
+    signals.topHot ? `热搜:${escHtml(signals.topHot.title)}` : '',
+    signals.topShop ? `热销:${escHtml(signals.topShop.title)}` : '',
+    signals.platforms.length ? `平台:${signals.platforms.join(' / ')}` : ''
+  ].filter(Boolean)};
+}
+
 function renderMktTab(catKey){
-  const data = MKT_PLAYBOOK[catKey];
+  const data = buildDynamicMktRows(catKey);
   const el = document.getElementById('mktContent');
+  fillInsight('insightMkt', buildMktInsight(catKey));
   if(catKey==='ALL' || !data){
-    // ALL 时聚合所有品类的代表行
     if(catKey==='ALL'){
       const rows = [];
-      Object.entries(MKT_PLAYBOOK).forEach(([k,arr])=>{
+      CAT_KEYS.filter(k=>k!=='ALL').forEach(k=>{
         const cat = CAT_BY_KEY[k];
-        rows.push({...arr[0], _cat: cat.ico+' '+cat.name});
+        const arr = buildDynamicMktRows(k);
+        if(arr[0]) rows.push({...arr[0], _cat: cat.ico+' '+cat.name});
       });
       el.innerHTML = renderMktTable(rows, /*all=*/true);
       return;
@@ -1226,14 +1411,15 @@ function renderMktTable(rows, isAll){
       ? `<div class="mkt-sub">${escHtml(r._cat)}<small>${escHtml(r.sub)}</small></div>`
       : `<div class="mkt-sub">${escHtml(r.sub)}<small>Sub-Category</small></div>`;
     const chips = r.topics.map(t=>{
-      const live = liveTopics.has(t);
+      const live = liveTopics.has(t) || (r._livePicked||[]).some(x=>(x.title||'').includes(t) || t.includes(x.title||'__never__'));
       return `<span class="chip ${live?'live':''}">${escHtml(t)}</span>`;
     }).join('');
+    const strategy = r._plain ? escHtml(r.strategy) : r.strategy;
     return `<div class="mkt-row">
       <div data-label="品类">${subText}</div>
       <div data-label="场景"><div class="mkt-scene">${escHtml(r.scene)}</div></div>
       <div data-label="话题钩子"><div class="mkt-topics">${chips}</div></div>
-      <div data-label="策略建议"><div class="mkt-strategy">${r.strategy}</div></div>
+      <div data-label="策略建议"><div class="mkt-strategy">${strategy}</div></div>
     </div>`;
   }).join('');
   return `<div class="mkt-table">${head}${body}</div>`;
@@ -1243,6 +1429,7 @@ function collectLiveTopics(){
   const set = new Set();
   const all = [...(STATE.hotLists||[]), ...(STATE.shopLists||[])];
   all.forEach(l=>l.items.forEach(it=>{
+    if(it.title) set.add(it.title);
     const hits = dictExtract(it.title, TOPIC_LIST);
     hits.forEach(t=>set.add(t));
     const phits = dictExtract(it.title, PRODUCT_LIST);
@@ -1269,6 +1456,14 @@ async function main(){
     document.getElementById('capAt').textContent = ago(latest?.capturedAt);
     document.getElementById('kpi-platform').textContent = latest.lists.length;
     document.getElementById('kpi-items').textContent = latest.lists.reduce((s,l)=>s+l.items.length,0);
+
+    try{
+      const insights = await getJSON(URL_INSIGHTS);
+      if(insights?.date === latest.date) STATE.llmInsights = insights;
+      else console.warn('Insight date does not match latest data date', insights?.date, latest.date);
+    }catch(e){
+      console.warn('LLM insights unavailable, using browser fallback', e);
+    }
 
     STATE.latest = latest;
     STATE.snapshots = snaps;
