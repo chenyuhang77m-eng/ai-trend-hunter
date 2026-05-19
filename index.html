@@ -210,22 +210,30 @@
   footer a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--accent)}
 
   /* MKT PLAYBOOK */
-  .mkt-table{border:1.5px solid var(--ink);background:var(--paper);box-shadow:6px 6px 0 var(--ink);margin-top:8px}
-  .mkt-row{display:grid;grid-template-columns:170px 170px 1.4fr 1.6fr;border-bottom:1px solid var(--ink);min-height:80px}
+  .mkt-table{border:1.5px solid var(--ink);background:var(--paper);box-shadow:6px 6px 0 var(--ink);margin-top:8px;overflow:hidden}
+  .mkt-row{display:grid;grid-template-columns:180px 200px 1.1fr 1.9fr;border-bottom:1px solid var(--ink);min-height:96px;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(227,214,187,.18))}
   .mkt-row:last-child{border-bottom:none}
-  .mkt-row.head{background:var(--ink);color:var(--paper);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;min-height:42px}
-  .mkt-row > div{padding:14px 16px;border-right:1px dashed rgba(13,12,10,.25);display:flex;flex-direction:column;justify-content:center}
+  .mkt-row:nth-child(even):not(.head){background:linear-gradient(180deg,rgba(236,226,207,.85),rgba(244,237,225,.7))}
+  .mkt-row:hover{background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(217,156,43,.12))}
+  .mkt-row.head{background:linear-gradient(90deg,var(--ink),#2b261f);color:var(--paper);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;min-height:48px}
+  .mkt-row > div{padding:16px 18px;border-right:1px dashed rgba(13,12,10,.18);display:flex;flex-direction:column;justify-content:center;position:relative}
   .mkt-row.head > div{border-right:1px solid rgba(244,237,225,.18);align-items:flex-start}
   .mkt-row > div:last-child{border-right:none}
+  .mkt-row:not(.head) > div:first-child{background:linear-gradient(180deg,rgba(200,51,31,.05),rgba(217,156,43,.08))}
   .mkt-sub{font-family:"Fraunces",serif;font-style:italic;font-weight:800;font-size:18px;line-height:1.15;color:var(--ink)}
-  .mkt-sub small{display:block;font-style:normal;font-weight:400;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--muted);margin-top:4px;text-transform:uppercase}
-  .mkt-scene{font-family:"Noto Serif SC",serif;font-size:13.5px;color:var(--accent-2);font-weight:600;line-height:1.5}
-  .mkt-topics{display:flex;flex-wrap:wrap;gap:6px}
-  .mkt-topics .chip{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.04em;background:var(--paper-3);color:var(--ink);padding:3px 8px;border:1px solid var(--ink);font-weight:600}
-  .mkt-topics .chip.live{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .mkt-strategy{font-family:"Noto Serif SC",serif;font-size:13.5px;line-height:1.65;color:var(--ink)}
-  .mkt-strategy b{background:linear-gradient(transparent 65%,var(--accent-3) 65%);padding:0 2px}
-  .mkt-strategy em{color:var(--accent);font-style:italic;font-weight:600;font-family:"Fraunces",serif}
+  .mkt-sub small{display:block;font-style:normal;font-weight:400;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--muted);margin-top:6px;text-transform:uppercase}
+  .mkt-scene{display:flex;flex-wrap:wrap;gap:8px}
+  .mkt-scene .chip{font-family:"Noto Serif SC",serif;font-size:12px;letter-spacing:.01em;background:rgba(26,77,63,.08);color:var(--accent-2);padding:5px 10px;border:1px solid rgba(26,77,63,.18);font-weight:700;border-radius:999px}
+  .mkt-topics{display:flex;flex-wrap:wrap;gap:8px}
+  .mkt-topics .chip{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.04em;background:#f6f1e8;color:var(--muted);padding:4px 9px;border:1px solid rgba(13,12,10,.22);font-weight:700;border-radius:999px;box-shadow:inset 0 -1px 0 rgba(13,12,10,.06)}
+  .mkt-topics .chip.live{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 10px rgba(200,51,31,.18)}
+  .mkt-topics .chip:not(.live){background:linear-gradient(180deg,#f6efe3,#ece2cf)}
+  .mkt-strategy{font-family:"Noto Serif SC",serif;font-size:13.5px;line-height:1.75;color:var(--ink)}
+  .mkt-strategy b{background:linear-gradient(transparent 60%,rgba(217,156,43,.6) 60%);padding:0 3px}
+  .mkt-strategy em{color:var(--accent);font-style:italic;font-weight:700;font-family:"Fraunces",serif}
+  .mkt-kicker{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+  .mkt-kicker::before{content:"";width:18px;height:1px;background:currentColor;opacity:.7}
+  .mkt-note{display:inline-block;margin-top:10px;padding:4px 8px;border:1px solid rgba(26,77,63,.18);background:rgba(26,77,63,.06);color:var(--accent-2);font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em}
   @media (max-width:980px){
     .mkt-row{grid-template-columns:1fr;}
     .mkt-row > div{border-right:none;border-bottom:1px dotted rgba(13,12,10,.2)}
@@ -1216,17 +1224,46 @@ function getDailyItems(catKey, kind='all'){
   return rows;
 }
 
+function cleanPhrase(s){
+  return String(s||'')
+    .replace(/[【】\[\]()（）]/g,' ')
+    .replace(/\b(官方|旗舰|正品|新款|爆款|热销|专用|家用|学生|宿舍|卧室|客厅|办公室|原价|券后|到手价|限时|随 机发|随机发)\b/gi,' ')
+    .replace(/\d+(?:\.\d+)?\s*(?:元|万|亿|g|kg|ml|L|斤|支|片|盒|瓶|袋|包|双|条|件|台|GB|TB|cm|cm\*\d+|ml\*\d+|gx\d+)/gi,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function extractTopicPhrases(text, limit=5){
+  const cleaned = cleanPhrase(text);
+  const dictHits = uniqList([
+    ...dictExtract(cleaned, TOPIC_LIST),
+    ...dictExtract(cleaned, PRODUCT_LIST)
+  ], limit * 3).filter(x=>x.length>=2 && x.length<=12);
+  const quoted = uniqList((cleaned.match(/[一-龥A-Za-z0-9]+/g) || [])
+    .filter(x=>x.length>=2 && x.length<=8)
+    .filter(x=>!/^(原价|券后|到手价|旗舰店|官方|家用|学生|宿舍|客厅|卧室|办公室|颜色|随机)$/.test(x)), limit * 4);
+  return uniqList([...dictHits, ...quoted], limit).slice(0, limit);
+}
+
 function topicLabelFromItem(it){
   const title = it?.title || '';
-  const dictHits = [
-    ...dictExtract(title, TOPIC_LIST),
-    ...dictExtract(title, PRODUCT_LIST)
-  ];
-  const labels = dictHits.length ? dictHits : [title];
-  return labels
-    .map(x=>String(x).trim())
-    .filter(x=>x.length>=2)
-    .map(x=>x.length>18 ? x.slice(0,18)+'…' : x);
+  return extractTopicPhrases(title, 4);
+}
+
+function inferScenes(catKey, row, labels){
+  const sceneBank = {
+    C3:['换机决策','通勤效率','出游记录','开学装备','AI体验'],
+    HOME:['换季焕新','租房改造','收纳整理','局部翻新','家庭囤货'],
+    APPL:['以旧换新','夏季降温','懒人清洁','早餐轻食','客厅升级'],
+    BABY:['科学喂养','夏季透气','亲子出行','开学衔接','成长礼赠'],
+    FOOD:['办公室囤货','夏季解暑','追剧零食','轻食代餐','节礼送礼'],
+    BEAU:['熬夜修护','通勤妆容','旅行防晒','敏肌修护','礼赠种草'],
+    CLOT:['通勤穿搭','户外防晒','跑步训练','换季上新','礼赠配饰'],
+    EDU:['暑期续报','提分冲刺','同城探店','假期出游','低预算换新']
+  };
+  const seeds = uniqList([...(Array.isArray(labels)?labels:[]), ...(extractTopicPhrases(row.scene || '', 3))], 5);
+  const bank = sceneBank[catKey] || ['内容种草','场景转化','人群扩散','节点促销','私域复用'];
+  return uniqList([...seeds.filter(x=>x.length<=8), ...bank], 5).slice(0,5);
 }
 
 function uniqList(arr, n=5){
@@ -1309,13 +1346,31 @@ function actionForMode(mode){
 function buildDynamicMktRows(catKey){
   const llmCat = STATE.llmInsights?.content?.categories?.[catKey];
   if(llmCat?.rows?.length){
-    return llmCat.rows.map(r=>({
-      sub:r.sub,
-      scene:r.scene,
-      topics:Array.isArray(r.topics)?r.topics.slice(0,6):[],
-      strategy:r.strategy,
-      _plain:true
-    }));
+    return llmCat.rows.map((r, idx)=>{
+      const row = {
+        sub:r.sub,
+        scene:r.scene,
+        topics:Array.isArray(r.topics)?r.topics:[],
+        strategy:r.strategy
+      };
+      const signals = mktSignals(catKey);
+      const picked = pickRowSignals(row, signals, idx);
+      const pickedLabels = uniqList(picked.flatMap(topicLabelFromItem), 8);
+      const topics = uniqList([
+        ...pickedLabels,
+        ...uniqList((row.topics||[]).flatMap(t=>extractTopicPhrases(t, 3)), 8),
+        ...signals.labels
+      ], 5);
+      const scenes = inferScenes(catKey, row, topics).slice(0,5);
+      const topHot = picked.find(x=>x.listCategory==='hot-search') || signals.topHot;
+      const topShop = picked.find(x=>x.listCategory==='shopping') || signals.topShop;
+      const hookText = topics.length ? `围绕 <em>${escHtml(topics.slice(0,2).join(' / '))}</em> 做首屏钩子` : '围绕品类常青需求做低噪声触达';
+      const hotText = topHot ? `热搜侧优先承接「${escHtml(topHot.title)}」` : '热搜侧以轻量内容占位';
+      const shopText = topShop ? `货架侧承接「${escHtml(topShop.title)}」的转化诉求` : '货架侧先用品类通用卖点承接';
+      const action = topShop ? actionForMode(signals.mode) : '先抢短视频与图文解释权,把高互动评论沉淀成次日商品卡卖点';
+      const strategy = `${hookText}，场景主打 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>。${hotText}，${shopText}。建议<b>${action}</b>，内容结构采用「场景切入 + 热点钩子 + 商品证明」三段式，在 ${channelForCat(catKey)} 做分发，并把高互动问答复用到直播间标题、搜索词和商品卡卖点。`;
+      return {...row, scenes, topics, strategy, _livePicked:picked};
+    });
   }
 
   const baseRows = MKT_PLAYBOOK[catKey] || [];
@@ -1330,19 +1385,18 @@ function buildDynamicMktRows(catKey){
 
   return selectedRows.map(({row, idx})=>{
     const picked = pickRowSignals(row, signals, idx);
-    const pickedLabels = picked.flatMap(topicLabelFromItem);
+    const pickedLabels = uniqList(picked.flatMap(topicLabelFromItem), 8);
     const topics = uniqList([...pickedLabels, ...signals.labels, ...(row.topics||[])], 5);
+    const scenes = inferScenes(catKey, row, topics).slice(0,5);
     const topHot = picked.find(x=>x.listCategory==='hot-search' && isRowHit(row, x)) || signals.topHot;
     const topShop = picked.find(x=>x.listCategory==='shopping' && isRowHit(row, x));
-    const main = picked[0] || signals.top || {};
     const sourceText = signals.platforms.length ? signals.platforms.join(' / ') : '暂无高热平台';
-    const scene = `${row.scene} · ${signals.mode}`;
     const hotText = topHot ? `热搜「${escHtml(topHot.title)}」(${escHtml(topHot.src)} ${escHtml(topHot.metric||'')})` : '热搜侧暂无强信号';
     const shopText = topShop ? `热销「${escHtml(topShop.title)}」(${escHtml(topShop.src)} ${escHtml(topShop.metric||'')})` : '电商侧暂无强关联 SKU,先用榜单话题试探需求';
-    const hook = main.title ? `今日优先借势「<em>${escHtml(main.title)}</em>」` : '今日以品类常青需求做低噪声触达';
+    const hook = topics.length ? `今日优先围绕「<em>${escHtml(topics.slice(0,2).join(' / '))}</em>」做短内容钩子` : '今日以品类常青需求做低噪声触达';
     const action = topShop ? actionForMode(signals.mode) : '先抢短视频与图文解释权,把互动最高的评论问题沉淀成次日商品卡卖点';
-    const strategy = `${hook},结合${hotText}与${shopText}。建议<b>${action}</b>,内容形式用「榜单解读 + 场景清单 + 达人实测」三段式,投放阵地:${channelForCat(catKey)}。监测 ${sourceText} 的互动变化,次日把高互动话题复用到直播间标题、搜索词和商品卡卖点。`;
-    return {...row, scene, topics, strategy, _livePicked:picked};
+    const strategy = `${hook}，场景聚焦 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>，结合${hotText}与${shopText}。建议<b>${action}</b>，内容形式用「榜单解读 + 场景清单 + 达人实测」三段式，投放阵地:${channelForCat(catKey)}。监测 ${sourceText} 的互动变化，次日把高互动话题复用到直播间标题、搜索词和商品卡卖点。`;
+    return {...row, scenes, topics, strategy, _livePicked:picked};
   });
 }
 
@@ -1410,14 +1464,19 @@ function renderMktTable(rows, isAll){
     const subText = isAll
       ? `<div class="mkt-sub">${escHtml(r._cat)}<small>${escHtml(r.sub)}</small></div>`
       : `<div class="mkt-sub">${escHtml(r.sub)}<small>Sub-Category</small></div>`;
-    const chips = r.topics.map(t=>{
+    const sceneList = Array.isArray(r.scenes) && r.scenes.length
+      ? r.scenes.slice(0,5)
+      : (r.scene ? extractTopicPhrases(r.scene, 5) : []);
+    const sceneChips = sceneList.map(s=>`<span class="chip">${escHtml(s)}</span>`).join('');
+    const topicList = Array.isArray(r.topics) ? r.topics.slice(0,5) : [];
+    const chips = topicList.map(t=>{
       const live = liveTopics.has(t) || (r._livePicked||[]).some(x=>(x.title||'').includes(t) || t.includes(x.title||'__never__'));
       return `<span class="chip ${live?'live':''}">${escHtml(t)}</span>`;
     }).join('');
-    const strategy = r._plain ? escHtml(r.strategy) : r.strategy;
+    const strategy = r.strategy;
     return `<div class="mkt-row">
       <div data-label="品类">${subText}</div>
-      <div data-label="场景"><div class="mkt-scene">${escHtml(r.scene)}</div></div>
+      <div data-label="场景"><div class="mkt-scene">${sceneChips}</div></div>
       <div data-label="话题钩子"><div class="mkt-topics">${chips}</div></div>
       <div data-label="策略建议"><div class="mkt-strategy">${strategy}</div></div>
     </div>`;
