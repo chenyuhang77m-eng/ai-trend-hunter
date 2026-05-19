@@ -233,6 +233,13 @@
   .mkt-strategy{font-family:"Noto Serif SC",serif;font-size:13.5px;line-height:1.75;color:var(--ink)}
   .mkt-strategy b{background:linear-gradient(transparent 60%,rgba(217,156,43,.6) 60%);padding:0 3px}
   .mkt-strategy em{color:var(--accent);font-style:italic;font-weight:700;font-family:"Fraunces",serif}
+  .strategy-parts{display:grid;gap:8px}
+  .strategy-part{border:1px solid rgba(13,12,10,.16);background:rgba(255,255,255,.34);padding:8px 10px;border-radius:8px}
+  .strategy-tag{display:inline-block;margin-right:7px;padding:2px 7px;border-radius:999px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:var(--accent)}
+  .strategy-part[data-kind="投放"]{background:rgba(26,77,63,.08);border-color:rgba(26,77,63,.2)}
+  .strategy-part[data-kind="投放"] .strategy-tag{background:var(--accent-2)}
+  .strategy-part[data-kind="复用"]{background:rgba(217,156,43,.13);border-color:rgba(217,156,43,.3)}
+  .strategy-part[data-kind="复用"] .strategy-tag{background:#a66b08}
   .mkt-kicker{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
   .mkt-kicker::before{content:"";width:18px;height:1px;background:currentColor;opacity:.7}
   .mkt-note{display:inline-block;margin-top:10px;padding:4px 8px;border:1px solid rgba(26,77,63,.18);background:rgba(26,77,63,.06);color:var(--accent-2);font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em}
@@ -1290,6 +1297,20 @@ function uniqItems(arr, n=5){
   return out.slice(0,n);
 }
 
+function renderStrategyText(text, isPlain){
+  const raw = String(text || '').trim();
+  if(!raw) return '';
+  if(!isPlain) return raw;
+  const normalized = raw.replace(/【(重点|投放|复用)】/g, '\n【$1】').trim();
+  const parts = normalized.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  if(!parts.some(p=>/^【(重点|投放|复用)】/.test(p))) return escHtml(raw);
+  return `<div class="strategy-parts">${parts.map(part=>{
+    const m = part.match(/^【(重点|投放|复用)】\s*(.*)$/);
+    if(!m) return `<div class="strategy-part">${escHtml(part)}</div>`;
+    return `<div class="strategy-part" data-kind="${escHtml(m[1])}"><span class="strategy-tag">${escHtml(m[1])}</span>${escHtml(m[2])}</div>`;
+  }).join('')}</div>`;
+}
+
 function mktSignals(catKey){
   const hot = getDailyItems(catKey, 'hot').slice(0,20);
   const shop = getDailyItems(catKey, 'shop').slice(0,20);
@@ -1352,6 +1373,7 @@ function buildDynamicMktRows(catKey){
     return llmCat.rows.map(r=>({
       sub:r.sub,
       scene:r.scene,
+      scenes:Array.isArray(r.scenes)&&r.scenes.length?r.scenes.slice(0,5):(r.scene?[r.scene]:[]),
       hotTerms:Array.isArray(r.hotTerms)?r.hotTerms.slice(0,5):[],
       topicIdeas:Array.isArray(r.topicIdeas)?r.topicIdeas.slice(0,5):[],
       topics:Array.isArray(r.topicIdeas)&&r.topicIdeas.length?r.topicIdeas.slice(0,5):(Array.isArray(r.topics)?r.topics.slice(0,5):[]),
@@ -1458,7 +1480,7 @@ function renderMktTable(rows, isAll){
       : `<div class="mkt-sub">${escHtml(r.sub)}<small>Sub-Category</small></div>`;
     const sceneList = Array.isArray(r.scenes) && r.scenes.length
       ? r.scenes.slice(0,5)
-      : (r.scene ? extractTopicPhrases(r.scene, 5) : []);
+      : (r.scene ? [r.scene] : []);
     const sceneChips = sceneList.map(s=>`<span class="chip">${escHtml(s)}</span>`).join('');
     const hotTerms = Array.isArray(r.hotTerms) ? r.hotTerms : [];
     const topicIdeas = Array.isArray(r.topicIdeas) && r.topicIdeas.length ? r.topicIdeas : (Array.isArray(r.topics) ? r.topics.slice(0,5) : []);
@@ -1471,9 +1493,9 @@ function renderMktTable(rows, isAll){
       return `<span class="chip ${live?'live':''}">${escHtml(t)}</span>`;
     }).join('');
     const chips = hotTerms.length
-      ? `<div class="mkt-chip-group"><b>??</b>${hotChips}</div><div class="mkt-chip-group"><b>??</b>${ideaChips}</div>`
+      ? `<div class="mkt-chip-group"><b>热点</b>${hotChips}</div><div class="mkt-chip-group"><b>话题</b>${ideaChips}</div>`
       : ideaChips;
-    const strategy = r._plain ? escHtml(r.strategy) : r.strategy;
+    const strategy = renderStrategyText(r.strategy, r._plain);
     return `<div class="mkt-row">
       <div data-label="品类">${subText}</div>
       <div data-label="场景"><div class="mkt-scene">${sceneChips}</div></div>
