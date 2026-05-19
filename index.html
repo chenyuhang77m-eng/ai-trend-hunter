@@ -466,8 +466,20 @@ const CATEGORIES = [
 ];
 const CAT_KEYS = CATEGORIES.map(c=>c.key);
 const CAT_BY_KEY = Object.fromEntries(CATEGORIES.map(c=>[c.key,c]));
+const CATEGORY_OVERRIDES = [
+  {
+    key:'FOOD',
+    re:/椰子水|电解质|驼奶|羊奶|牛奶|酸奶|奶粉|乳制品|钙片|奶片|益生菌|维生素|蛋白粉|乳清|饮料|果汁|苹果汁|矿泉水|纯净水|苏打水|茶饮|咖啡|零食|食品|坚果|饼干|糖果|方便面|拌面|蔬菜|水果|榴莲|西瓜/i
+  },
+  {
+    key:'CLOT',
+    re:/聚拢|内衣|文胸|胸罩|bra|bralette|家居服|睡衣|内裤|袜|丝袜|打底裤|防晒衣|T恤|连衣裙|半身裙|裙|裤|鞋|拖鞋|凉拖|帽子|箱包|背包|穿搭|服饰|服装|女装|男装/i
+  }
+];
 
 function categorize(title){
+  const forced = CATEGORY_OVERRIDES.find(rule=>rule.re.test(title));
+  if(forced) return forced.key;
   for(const c of CATEGORIES){
     if(c.key==='ALL') continue;
     if(c.re.test(title)) return c.key;
