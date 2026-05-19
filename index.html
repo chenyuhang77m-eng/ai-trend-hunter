@@ -388,6 +388,10 @@
         <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-top:6px">Topics × Products · click categories below to filter both clouds</div>
       </div>
     </div>
+    <div class="insight" id="insightCloud" style="margin-top:18px">
+      <div class="tag"><div class="t1">Brief</div><div class="t2">Cloud</div></div>
+      <div class="body"><div class="lead">加载中...</div></div>
+    </div>
     <div class="cat-tabs" id="cloudTabs" style="margin-top:18px"></div>
     <div class="cloud-row">
       <div class="cloud-cell">
@@ -594,6 +598,10 @@ function topItemsByCat(lists, catKey, n=8){
   return arr.slice(0,n);
 }
 function buildHotInsight(hotLists, catKey){
+  if(catKey==='ALL'){
+    const llmBrief = llmModuleBrief('hot');
+    if(llmBrief) return llmBrief;
+  }
   const items = topItemsByCat(hotLists, catKey, 50);
   const total = items.length;
   if(!total) return {lead:`今日五大热搜榜中,<em>「${escHtml(CAT_BY_KEY[catKey].name)}」</em>品类暂无明显话题——可能该品类<em>不是今日舆论焦点</em>,适合做<b>错峰内容投放</b>。`, items:[]};
@@ -614,6 +622,10 @@ function buildHotInsight(hotLists, catKey){
   return {lead, items: items.slice(0,4).map(x=>`${escHtml(x.src)}:${escHtml(x.title)}`)};
 }
 function buildShopInsight(shopLists, catKey){
+  if(catKey==='ALL'){
+    const llmBrief = llmModuleBrief('shop');
+    if(llmBrief) return llmBrief;
+  }
   const items = topItemsByCat(shopLists, catKey, 50);
   const total = items.length;
   if(!total) return {lead:`今日四大电商榜中,<em>「${escHtml(CAT_BY_KEY[catKey].name)}」</em>品类暂无 SKU 上榜——该品类<em>不是当下电商爆款赛道</em>,可重点观察后续天数变化。`, items:[]};
@@ -642,6 +654,15 @@ function buildShopInsight(shopLists, catKey){
 function fillInsight(elId, ins){
   const el = document.getElementById(elId);
   el.querySelector('.body').innerHTML = `<div class="lead">${ins.lead}</div>` + (ins.items?.length?`<ul>${ins.items.map(x=>`<li>${x}</li>`).join('')}</ul>`:'');
+}
+
+function llmModuleBrief(key){
+  const brief = STATE.llmInsights?.content?.briefs?.[key];
+  if(!brief?.lead) return null;
+  return {
+    lead: escHtml(brief.lead),
+    items: (brief.bullets||[]).slice(0,4).map(escHtml)
+  };
 }
 
 /* ============ TREND : RESONANCE / NEW / GONE / BAR / LINE ============ */
@@ -1068,10 +1089,29 @@ function renderCloud(divId, data, palette, chartRef){
   });
   return ch;
 }
+function buildCloudInsight(topicData, productData, catKey){
+  const catName = CAT_BY_KEY[catKey]?.name || '全部';
+  const topTopic = topicData[0]?.name;
+  const topProduct = productData[0]?.name;
+  const lead = topTopic || topProduct
+    ? `「${escHtml(catName)}」词云显示,话题侧高频词为 <em>${escHtml(topTopic||'暂无')}</em>,商品侧高频词为 <em>${escHtml(topProduct||'暂无')}</em>,可用于判断内容热度和货架卖点之间的衔接。`
+    : `「${escHtml(catName)}」词云暂未识别到足够的有效词,建议等待更多榜单信号。`;
+  return {
+    lead,
+    items: [
+      topTopic ? `话题词:${escHtml(topTopic)}` : '',
+      topProduct ? `商品词:${escHtml(topProduct)}` : '',
+      `话题词数量:${topicData.length}`,
+      `商品词数量:${productData.length}`
+    ].filter(Boolean)
+  };
+}
 function renderClouds(){
   const cat = STATE.cloudCat;
   const dataT = buildCloudData(STATE.hotLists,  cat, false);
   const dataP = buildCloudData(STATE.shopLists, cat, true);
+  const llmBrief = cat==='ALL' ? llmModuleBrief('cloud') : null;
+  fillInsight('insightCloud', llmBrief || buildCloudInsight(dataT, dataP, cat));
   if(chTopics) chTopics.dispose();
   if(chProducts) chProducts.dispose();
   chTopics   = renderCloud('cloudTopics',   dataT, ['#c8331f','#d99c2b','#7d3a8c','#1f5fbd','#0d0c0a']);
@@ -1102,6 +1142,8 @@ function renderNarratives(latest, snaps, resonance, ng){
 }
 
 function buildTrendInsight(latest, snaps, resonance, ng){
+  const llmBrief = llmModuleBrief('trend');
+  if(llmBrief) return llmBrief;
   let lead = `近 <b>${snaps.length}</b> 天的归档数据,`;
   if(resonance.length) lead += `今日跨平台共振词 <b>${resonance.length}</b> 个,TOP1 是 <em>「${escHtml(resonance[0][0])}」</em>(${resonance[0][1].count} 平台)。`;
   else lead += `今日各平台热点高度分散,无显著共振词。`;
@@ -1417,7 +1459,7 @@ function buildDynamicMktRows(catKey){
 function buildMktInsight(catKey){
   const llm = STATE.llmInsights?.content;
   if(catKey==='ALL' && llm?.summary){
-    return {lead:escHtml(llm.summary.lead), items:(llm.summary.bullets||[]).map(escHtml)};
+    return llmModuleBrief('marketing') || {lead:escHtml(llm.summary.lead), items:(llm.summary.bullets||[]).map(escHtml)};
   }
   const llmCat = llm?.categories?.[catKey];
   if(llmCat){
