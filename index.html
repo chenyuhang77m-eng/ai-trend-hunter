@@ -1349,15 +1349,15 @@ function pickRowSignals(row, signals, rowIndex){
 
 function channelForCat(catKey){
   return {
-    C3:'抖音科技榜、B站测评区、知乎数码问答、小红书新品种草',
-    HOME:'小红书家居笔记、抖音家装案例、视频号本地生活、京东家装会场',
-    APPL:'抖音家电榜、京东/天猫品类日、小红书真实长测、视频号家庭场景',
-    BABY:'小红书母婴圈、抖音育儿达人、宝宝树/有赞母婴、京东母婴会场',
-    FOOD:'抖音美食榜、小红书便利店/办公室零食、视频号本地达人、京东食品会场',
-    BEAU:'小红书成分党、抖音美妆测评、视频号皮肤管理、B站妆造区',
-    CLOT:'小红书穿搭/户外、抖音穿搭达人、视频号女性圈层、天猫服饰会场',
-    EDU:'小红书家长/本地生活、抖音教育/同城、知乎问答、私域社群'
-  }[catKey] || '抖音、小红书、视频号、京东/天猫品类会场';
+    C3:'抖音科技榜、巨量引擎数码兴趣人群、巨量星图测评达人、抖音电商商品卡',
+    HOME:'抖音家装案例、巨量引擎家居兴趣人群、巨量星图家居达人、今日头条家装内容流',
+    APPL:'抖音家电榜、巨量引擎家电人群包、巨量星图测评达人、抖音电商商品卡',
+    BABY:'抖音育儿达人、巨量星图母婴达人、巨量引擎宝妈人群、抖音电商母婴货架',
+    FOOD:'抖音美食榜、巨量星图美食达人、巨量引擎本地生活人群、抖音电商食品货架',
+    BEAU:'抖音美妆测评、巨量星图美妆达人、巨量引擎美妆人群、抖音电商品牌直播',
+    CLOT:'抖音穿搭达人、巨量星图时尚达人、巨量引擎服饰人群、抖音电商服饰货架',
+    EDU:'抖音教育/同城、巨量引擎线索人群、巨量星图知识达人、今日头条信息流'
+  }[catKey] || '抖音、巨量引擎、巨量星图、字节品牌广告、红果短剧';
 }
 
 function actionForMode(mode){
@@ -1373,7 +1373,7 @@ function buildDynamicMktRows(catKey){
     return llmCat.rows.map(r=>({
       sub:r.sub,
       scene:r.scene,
-      scenes:Array.isArray(r.scenes)&&r.scenes.length?r.scenes.slice(0,5):(r.scene?[r.scene]:[]),
+      scenes:Array.isArray(r.scenes)&&r.scenes.length?r.scenes.slice(0,4):(r.scene?[r.scene]:[]),
       hotTerms:Array.isArray(r.hotTerms)?r.hotTerms.slice(0,5):[],
       topicIdeas:Array.isArray(r.topicIdeas)?r.topicIdeas.slice(0,5):[],
       topics:Array.isArray(r.topicIdeas)&&r.topicIdeas.length?r.topicIdeas.slice(0,5):(Array.isArray(r.topics)?r.topics.slice(0,5):[]),
@@ -1396,7 +1396,7 @@ function buildDynamicMktRows(catKey){
     const pickedLabels = uniqList(picked.flatMap(topicLabelFromItem), 8);
     // 修复:不再把 signals.labels(全类目漫灌)塞进 row.topics
     const topics = uniqList([...pickedLabels, ...(row.topics||[])], 5);
-    const scenes = inferScenes(catKey, row, topics).slice(0,5);
+    const scenes = inferScenes(catKey, row, topics).slice(0,4);
     const topHot = picked.find(x=>x.listCategory==='hot-search' && isRowHit(row, x));
     const topShop = picked.find(x=>x.listCategory==='shopping' && isRowHit(row, x));
     const hasSignal = picked.length > 0;
@@ -1479,7 +1479,7 @@ function renderMktTable(rows, isAll){
       ? `<div class="mkt-sub">${escHtml(r._cat)}<small>${escHtml(r.sub)}</small></div>`
       : `<div class="mkt-sub">${escHtml(r.sub)}<small>Sub-Category</small></div>`;
     const sceneList = Array.isArray(r.scenes) && r.scenes.length
-      ? r.scenes.slice(0,5)
+      ? r.scenes.slice(0,4)
       : (r.scene ? [r.scene] : []);
     const sceneChips = sceneList.map(s=>`<span class="chip">${escHtml(s)}</span>`).join('');
     const hotTerms = Array.isArray(r.hotTerms) ? r.hotTerms : [];
