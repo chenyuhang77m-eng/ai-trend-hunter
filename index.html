@@ -231,15 +231,15 @@
   .mkt-topics .chip.live{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 10px rgba(200,51,31,.18)}
   .mkt-topics .chip:not(.live){background:linear-gradient(180deg,#f6efe3,#ece2cf)}
   .mkt-strategy{font-family:"Noto Serif SC",serif;font-size:13.5px;line-height:1.75;color:var(--ink)}
-  .mkt-strategy b{background:linear-gradient(transparent 60%,rgba(217,156,43,.6) 60%);padding:0 3px}
-  .mkt-strategy em{color:var(--accent);font-style:italic;font-weight:700;font-family:"Fraunces",serif}
+  .mkt-strategy b{background:linear-gradient(transparent 58%,rgba(217,156,43,.62) 58%);padding:0 3px;border-radius:2px}
+  .mkt-strategy em{color:var(--accent);font-style:italic;font-weight:700;font-family:"Fraunces",serif;text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:rgba(200,51,31,.28);text-underline-offset:3px}
   .strategy-parts{display:grid;gap:8px}
-  .strategy-part{border:1px solid rgba(13,12,10,.16);background:rgba(255,255,255,.34);padding:8px 10px;border-radius:8px}
+  .strategy-part{border:1px solid rgba(13,12,10,.16);background:linear-gradient(180deg,rgba(255,255,255,.48),rgba(246,239,227,.5));padding:9px 11px;border-radius:8px}
   .strategy-tag{display:inline-block;margin-right:7px;padding:2px 7px;border-radius:999px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:var(--accent)}
   .strategy-part[data-kind="投放"]{background:rgba(26,77,63,.08);border-color:rgba(26,77,63,.2)}
   .strategy-part[data-kind="投放"] .strategy-tag{background:var(--accent-2)}
-  .strategy-part[data-kind="复用"]{background:rgba(217,156,43,.13);border-color:rgba(217,156,43,.3)}
-  .strategy-part[data-kind="复用"] .strategy-tag{background:#a66b08}
+  .strategy-quote{background:rgba(217,156,43,.2);box-shadow:inset 0 -5px rgba(217,156,43,.24);padding:0 3px;border-radius:3px;font-weight:700}
+  .strategy-channel{display:inline-block;margin:0 2px;padding:1px 5px;border-radius:999px;background:rgba(26,77,63,.11);color:var(--accent-2);font-family:"JetBrains Mono",monospace;font-size:11px}
   .mkt-kicker{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
   .mkt-kicker::before{content:"";width:18px;height:1px;background:currentColor;opacity:.7}
   .mkt-note{display:inline-block;margin-top:10px;padding:4px 8px;border:1px solid rgba(26,77,63,.18);background:rgba(26,77,63,.06);color:var(--accent-2);font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em}
@@ -828,7 +828,7 @@ const TOPIC_DICT = [
   '宜家','无印良品','北欧风','新中式家居','极简主义','断舍离','收纳神器','悬浮床','智能床',
   '装修翻车','整装套餐','全屋定制','开放式厨房','岛台厨房','日式榻榻米','飘窗改造','阳台花园','屋顶花园',
   '甲醛超标','除甲醛','空气检测','静音门窗','隔音棉','瓷砖美缝','防水涂料','地暖','新风系统','中央空调',
-  '智能马桶','即热花洒','大花洒','卫浴升级','换季大扫除','清洁神器','洗地机','蒸汽拖把',
+  '智能马桶','即热花洒','大花洒','卫浴升级','厨房卫浴','换季大扫除','清洁神器','洗地机','蒸汽拖把',
   '居家氛围感','治愈系家居','复古软装','手工地毯','法式风情',
 
   // ========== 家用电器 ==========
@@ -1189,8 +1189,8 @@ const MKT_PLAYBOOK = {
      strategy:'以「<em>春困/失眠/熬夜党</em>」为情绪钩子,联合睡眠博主与中医达人做「<b>科学助眠</b>」内容。投放阵地:小红书睡眠话题、抖音家居橱窗、知乎健康专栏。'},
     {sub:'整装/装修',  scene:'婚装/换房季',         topics:['全屋定制','岛台厨房','北欧风','新中式家居'],
      strategy:'用 <em>装修日记/避坑攻略</em> 长内容沉淀私域,投放阵地以 <b>抖音家居话题、小红书装修笔记、好好住 APP</b> 为主,重点孵化「素人改造案例」。'},
-    {sub:'卫浴升级',   scene:'局改 / 适老化改造',   topics:['智能马桶','即热花洒','大花洒','九牧','箭牌'],
-     strategy:'以「<em>3 天搞定卫生间局改</em>」为内容钩子,与装修垂类 KOC 共创「<b>局改前后对比</b>」短视频。投放阵地:抖音家居榜、京东家装节、天猫超级品类日。'},
+    {sub:'厨房卫浴',   scene:'厨卫局改 / 清洁升级',   topics:['智能马桶','即热花洒','厨房卫浴','花洒','水槽'],
+     strategy:'以「<em>3 天搞定厨卫局改</em>」为内容主线,与装修垂类 KOC 共创「<b>改造前后对比</b>」「<b>厨卫动线避坑</b>」短视频。投放阵地:抖音家居案例、巨量星图家居达人、巨量引擎家居兴趣人群。'},
     {sub:'软装收纳',   scene:'治愈系居家氛围',      topics:['收纳神器','可折叠','奶油风','法式风','北欧风'],
      strategy:'与生活方式博主共创「<b>10 ㎡治愈出租屋</b>」「<b>5 件让小户型立刻高级</b>」清单内容。投放阵地:小红书居家话题、视频号生活方式。'},
   ],
@@ -1351,17 +1351,25 @@ function uniqItems(arr, n=5){
   return out.slice(0,n);
 }
 
+function formatStrategyBody(body){
+  return body
+    .replace(/「([^」]+)」/g, '「<span class="strategy-quote">$1</span>」')
+    .replace(/(抖音电商|抖音搜索|抖音企业号|抖音|巨量引擎|巨量星图|字节品牌广告|今日头条|西瓜视频|懂车帝|红果短剧)/g, '<span class="strategy-channel">$1</span>');
+}
+
 function renderStrategyText(text, isPlain){
   const raw = String(text || '').trim();
   if(!raw) return '';
-  if(!isPlain) return raw;
-  const normalized = raw.replace(/【(重点|投放|复用)】/g, '\n【$1】').trim();
+  const normalized = raw.replace(/【(重点|投放)】/g, '\n【$1】').trim();
   const parts = normalized.split(/\n+/).map(s=>s.trim()).filter(Boolean);
-  if(!parts.some(p=>/^【(重点|投放|复用)】/.test(p))) return escHtml(raw);
+  if(!parts.some(p=>/^【(重点|投放)】/.test(p))){
+    return isPlain ? formatStrategyBody(escHtml(raw)) : raw;
+  }
   return `<div class="strategy-parts">${parts.map(part=>{
-    const m = part.match(/^【(重点|投放|复用)】\s*(.*)$/);
-    if(!m) return `<div class="strategy-part">${escHtml(part)}</div>`;
-    return `<div class="strategy-part" data-kind="${escHtml(m[1])}"><span class="strategy-tag">${escHtml(m[1])}</span>${escHtml(m[2])}</div>`;
+    const m = part.match(/^【(重点|投放)】\s*(.*)$/);
+    if(!m) return `<div class="strategy-part">${isPlain ? formatStrategyBody(escHtml(part)) : part}</div>`;
+    const body = isPlain ? formatStrategyBody(escHtml(m[2])) : m[2];
+    return `<div class="strategy-part" data-kind="${escHtml(m[1])}"><span class="strategy-tag">${escHtml(m[1])}</span>${body}</div>`;
   }).join('')}</div>`;
 }
 
@@ -1462,8 +1470,8 @@ function buildDynamicMktRows(catKey){
       : `今日「<em>${escHtml(row.sub)}</em>」暂无强信号,以常青需求做低噪声触达`;
     const action = (hasSignal && topShop) ? actionForMode(signals.mode) : '保持小预算 A/B 素材测试,沉淀真实评论需求,避免强行关联无关热点';
     const strategy = hasSignal
-      ? `${hook}，场景聚焦 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>，结合${hotText}与${shopText}。建议<b>${action}</b>，内容形式用「榜单解读 + 场景清单 + 达人实测」三段式，投放阵地:${channelForCat(catKey)}。监测 ${sourceText} 的互动变化，次日把高互动话题复用到直播间标题、搜索词和商品卡卖点。`
-      : `${hook}，场景聚焦 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>。${hotText}；${shopText}。建议<b>${action}</b>，内容形式以「场景切入 + 用户证言」为主,投放阵地:${channelForCat(catKey)}。等明日相关信号出现后再决定是否放大投放。`;
+      ? `【重点】${hook}，场景聚焦 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>，结合${hotText}与${shopText}。建议<b>${action}</b>，内容形式用「榜单解读 + 场景清单 + 达人实测」三段式，并补一条「用户痛点开场 + 产品细节实拍」短视频脚本，方便达人直接复刻。【投放】抖音首发，巨量引擎小额放大，巨量星图匹配垂类达人。`
+      : `【重点】${hook}，场景聚焦 <b>${escHtml(scenes.slice(0,2).join(' / '))}</b>。${hotText}；${shopText}。建议<b>${action}</b>，内容形式以「场景切入 + 用户证言」为主，再做一版「避坑清单 / 选购 checklist」承接搜索需求。【投放】抖音企业号先发，巨量星图小型达人测素材。`;
     return {...row, scenes, topics, strategy, _livePicked:picked};
   });
 }
