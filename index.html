@@ -843,7 +843,7 @@ function renderLine(snaps){
 const TOPIC_DICT = [
   // ========== 3C数码 / AI ==========
   'DeepSeek','文心大模型','文心5.1','GPT','GPT5','ChatGPT','Claude','Gemini','Sora','可灵',
-  'iPhone','iPhone17','iPhone17Pro','iPhone16','华为Mate70','Mate70','华为Pura80','小米15','小米SU7','小米YU7',
+  'iPhone','iPhone17','iPhone17Pro','iPhone16','华为Mate70','Mate70','华为Pura80','小米15','小米SU7','小米YU7','荣耀','荣耀600','半导体','5G',
   'OPPO Find X8','vivo X200','荣耀Magic7','三星S25','三星折叠屏','MacBook','iPad','AirPods','Apple Watch','Vision Pro',
   '大疆','大疆Mini5','大疆Action','GoPro','英伟达','黄仁勋','RTX5090','英特尔','AMD',
   '鸿蒙','HarmonyOS','麒麟芯片','算力','大模型','AI手机','AI PC','AI眼镜','AI耳机','AI Agent','具身智能','人形机器人','机器人',
@@ -1052,6 +1052,13 @@ const PRODUCT_SELLING = [
 /* 把所有词按长度倒序,长词优先匹配,避免子串误覆盖 */
 const TOPIC_LIST   = [...new Set(TOPIC_DICT)].sort((a,b)=>b.length-a.length);
 const PRODUCT_LIST = [...new Set([...PRODUCT_BRANDS, ...PRODUCT_SELLING])].sort((a,b)=>b.length-a.length);
+const ENTERTAINMENT_SPORTS_TOPICS = [
+  '综艺','浪姐','乘风','青春修炼手册','舞台','演唱会','音乐节','MV','主题曲','电影','电视剧','短剧','票房','暑期档','定档','官宣','直播','同款','明星同款','路透','剧综','CP',
+  '世界杯','NBA','CBA','欧冠','中超','KPL','电竞','运动会','马拉松','跑步','健身','冠军','决赛','半决赛','主场','客场','球队','赛事','主题曲MV','马刺','雷霆','湖人','勇士','山东泰山','武汉三镇','国足','女足','男篮','女篮','梅西','肖战','唐艺昕','王鹤棣'
+].sort((a,b)=>b.length-a.length);
+const CLOUD_TOPIC_BLOCK_RE = /警方|通报|身亡|死亡|遇难|救援|被抓|失联|事故|火灾|坠亡|诈骗|问责|辟谣|冲走|溺水|癌|病|甲状腺|大脑|派出所|所长|徒手扒|安全生产|外贸|债务|套现|神舟|航天|航天员|空间站|飞船|发射|对接|大红屏|政策|会议|政务/;
+const ENTERTAINMENT_SPORTS_RE = /综艺|浪姐|乘风|舞台|演唱会|音乐节|MV|主题曲|电影|电视剧|短剧|票房|定档|官宣|直播|明星|同款|经纪人|朋友圈|KPL|世界杯|NBA|CBA|欧冠|中超|电竞|运动会|马拉松|马刺|雷霆|湖人|勇士|国足|女足|男篮|女篮|冠军|决赛|赛事|泰山|三镇/;
+const CLOUD_TOPIC_STOP_RE = /发布|回应|上新|正式|成功|网友|官方|如何|为何|原来|这个|这些|一个|一种|多项|再次|已经|可以|不是|没有|左右|今日|最新/;
 
 function dictExtract(text, dict){
   if(!text) return [];
@@ -1076,14 +1083,30 @@ function dictExtract(text, dict){
   return hits;
 }
 
+function shouldSkipTopicCloudTitle(title){
+  const text = String(title||'');
+  if(!CLOUD_TOPIC_BLOCK_RE.test(text)) return false;
+  return !ENTERTAINMENT_SPORTS_RE.test(text);
+}
+
+function extractEntertainmentSportsTopics(title){
+  const text = String(title||'');
+  if(!ENTERTAINMENT_SPORTS_RE.test(text)) return [];
+  return [...new Set(dictExtract(text, ENTERTAINMENT_SPORTS_TOPICS)
+    .filter(s=>!CLOUD_TOPIC_STOP_RE.test(s)))].slice(0,4);
+}
+
 function buildCloudData(lists, catKey, isProduct){
   const dict = isProduct ? PRODUCT_LIST : TOPIC_LIST;
   const m = new Map();
   lists.forEach(l=>{
     l.items.forEach(it=>{
       if(catKey!=='ALL' && categorize(it.title)!==catKey) return;
+      if(!isProduct && shouldSkipTopicCloudTitle(it.title)) return;
       const weight = Math.max(parseMetric(it.metric)||5e4, 1e4);
-      const hits = dictExtract(it.title, dict);
+      const hits = isProduct
+        ? dictExtract(it.title, dict)
+        : [...dictExtract(it.title, dict), ...extractEntertainmentSportsTopics(it.title)];
       const seen = new Set();
       hits.forEach(t=>{
         if(seen.has(t)) return; seen.add(t);
