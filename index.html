@@ -1111,12 +1111,13 @@ function llmWordCloudData(catKey, isProduct){
   if(!clouds) return null;
   const source = catKey === 'ALL'
     ? (isProduct ? clouds.product : clouds.topic)
-    : clouds.category?.[catKey];
+    : (isProduct ? clouds.productCategory?.[catKey] : clouds.topicCategory?.[catKey]) || clouds.category?.[catKey];
   if(!Array.isArray(source) || !source.length) return null;
   return source.map(item=>({
     name: item.word || item.name,
     value: Number(item.weight || item.value || 10),
-    src: 'LLM',
+    src: item.sources?.length ? item.sources.map(s=>`${s.sourceName || ''}:${s.title || s}`).join(' / ') : (STATE.llmWordClouds?.wordCloudSource || 'LLM'),
+    sources: Array.isArray(item.sources) ? item.sources : [],
     times: 1,
     type: item.type || (isProduct ? 'product' : 'topic')
   })).filter(item=>item.name).slice(0,80);
@@ -1138,14 +1139,15 @@ function buildCloudData(lists, catKey, isProduct){
       const seen = new Set();
       hits.forEach(t=>{
         if(seen.has(t)) return; seen.add(t);
-        const cur = m.get(t) || {value:0, src:l.sourceName, times:0,
+        const cur = m.get(t) || {value:0, src:l.sourceName, sources:[], times:0,
                                   type: (isProduct && PRODUCT_BRANDS.includes(t)) ? 'brand' : (isProduct?'selling':'topic')};
         cur.value += weight; cur.times += 1;
+        if(cur.sources.length < 4 && !cur.sources.some(s=>s.title===it.title)) cur.sources.push({sourceName:l.sourceName,listName:l.listName,title:it.title});
         m.set(t, cur);
       });
     });
   });
-  const arr = [...m.entries()].map(([name,o])=>({name, value:o.value, src:o.src, times:o.times, type:o.type}));
+  const arr = [...m.entries()].map(([name,o])=>({name, value:o.value, src:o.src, sources:o.sources, times:o.times, type:o.type}));
   arr.sort((a,b)=>b.value-a.value);
   return arr.slice(0,80);
 }
@@ -1164,7 +1166,10 @@ function renderCloud(divId, data, palette, chartRef){
     tooltip:{backgroundColor:'#0d0c0a',borderColor:'#0d0c0a',textStyle:{color:'#f4ede1',fontFamily:'Noto Serif SC',fontSize:12},
       formatter:p=>{
         const typeLabel = p.data.type==='brand'?'<span style="color:#d99c2b">品牌词</span>':p.data.type==='selling'?'<span style="color:#3a8c4a">卖点词</span>':'<span style="color:#c8331f">话题词</span>';
-        return `<b style="color:${p.color};font-size:14px">${p.name}</b> ${typeLabel}<br/>来源:${p.data.src}<br/>命中次数:${p.data.times}`;
+        const sources = Array.isArray(p.data.sources) && p.data.sources.length
+          ? p.data.sources.slice(0,4).map(s=>`${escHtml(s.sourceName||'')}${s.listName?` / ${escHtml(s.listName)}`:''}: ${escHtml(s.title||s)}`).join('<br/>')
+          : escHtml(p.data.src || '');
+        return `<b style="color:${p.color};font-size:14px">${p.name}</b> ${typeLabel}<br/>来源词条:<br/>${sources}<br/>命中次数:${p.data.times}`;
       }},
     series:[{
       type:'wordCloud',shape:'circle',left:'center',top:'center',
