@@ -446,7 +446,10 @@
 
 <script>
 /* ============ DATA SOURCES ============ */
-const REPO_BASE = 'https://raw.githubusercontent.com/chenyuhang77m-eng/top-rank-tracker/main';
+const IS_LOCAL_PREVIEW = ['localhost', '127.0.0.1'].includes(location.hostname);
+const REPO_BASE = IS_LOCAL_PREVIEW
+  ? `${location.origin}/top-rank-tracker`
+  : 'https://raw.githubusercontent.com/chenyuhang77m-eng/top-rank-tracker/main';
 const URL_INDEX  = REPO_BASE + '/data/index.json';
 const URL_INSIGHTS = REPO_BASE + '/data/insights/latest.json';
 const dayUrl = (d)=> REPO_BASE + `/data/${d}.json`;
@@ -468,6 +471,10 @@ const CAT_KEYS = CATEGORIES.map(c=>c.key);
 const CAT_BY_KEY = Object.fromEntries(CATEGORIES.map(c=>[c.key,c]));
 const CATEGORY_OVERRIDES = [
   {
+    key:'EDU',
+    re:/图书|书籍|童书|绘本|纸板书|分级读物|读物|教材|教辅|课本|练习册|习题|试卷|字帖|作文书|课外书|课外阅读|阅读书|名著|小说|文学|漫画|百科|词典|字典|考研书|公考书|真题|四六级|雅思|托福|幼小衔接|识字书|学习方法报|小学生|中学生|初中|高中|一年级|二年级|三年级|四年级|五年级|六年级/i
+  },
+  {
     key:'FOOD',
     re:/即食|可食用|冲泡|冲调|饮用|烹饪|佐餐|下饭|代餐|调味|滋补|养生食材|食品|零食|饮料|茶饮|奶茶|咖啡|啤酒|白酒|红酒|葡萄酒|洋酒|黄酒|奶|牛奶|酸奶|羊奶|驼奶|奶粉|乳制品|椰子水|电解质|果汁|苹果汁|矿泉水|纯净水|苏打水|糕点|点心|饼干|薯片|糖果|巧克力|坚果|肉干|卤味|粮油|米面|方便面|拌面|速食|轻食|熟食|预制菜|调味料|调料|酱料|火锅底料|生鲜|水果|蔬菜|菌菇|肉制品|鸡肉|牛肉|猪肉|羊肉|鱼肉|肉|蛋|海鲜|水产|皮皮虾|榴莲|车厘子|西瓜|燕窝|花胶|参茸|汤料|粽子|粽|月饼|年货|腊味|食品礼盒|伴手礼食品|钙片|奶片|益生菌|维生素|蛋白粉|乳清/i
   },
@@ -477,12 +484,13 @@ const CATEGORY_OVERRIDES = [
   }
 ];
 
-function categorize(title){
-  const forced = CATEGORY_OVERRIDES.find(rule=>rule.re.test(title));
+function categorize(title, listName=''){
+  const text = `${listName} ${title}`;
+  const forced = CATEGORY_OVERRIDES.find(rule=>rule.re.test(text));
   if(forced) return forced.key;
   for(const c of CATEGORIES){
     if(c.key==='ALL') continue;
-    if(c.re.test(title)) return c.key;
+    if(c.re.test(text)) return c.key;
   }
   return null;  // 未归类
 }
@@ -548,7 +556,7 @@ function renderCatTabs(containerId, currentKey, counts, onChange){
 function filterListsByCat(lists, catKey){
   if(catKey==='ALL') return lists.map(l=>({...l, items:l.items.slice(0,10)}));
   return lists.map(l=>{
-    const items = l.items.filter(it=>categorize(it.title)===catKey).slice(0,10);
+    const items = l.items.filter(it=>categorize(it.title, l.listName)===catKey).slice(0,10);
     return {...l, items, _filteredCount:items.length};
   });
 }
@@ -559,7 +567,7 @@ function countByCategory(lists){
   CATEGORIES.forEach(c=>{if(c.key!=='ALL') counts[c.key]=0;});
   lists.forEach(l=>l.items.forEach(it=>{
     counts.ALL++;
-    const c = categorize(it.title);
+    const c = categorize(it.title, l.listName);
     if(c) counts[c]++;
   }));
   return counts;
@@ -603,7 +611,7 @@ function renderShop(){
 function topItemsByCat(lists, catKey, n=8){
   const arr = [];
   lists.forEach(l=>l.items.forEach(it=>{
-    if(catKey!=='ALL' && categorize(it.title)!==catKey) return;
+    if(catKey!=='ALL' && categorize(it.title, l.listName)!==catKey) return;
     arr.push({src:l.sourceName, ...it, val:parseMetric(it.metric)});
   }));
   arr.sort((a,b)=>b.val-a.val);
@@ -1096,12 +1104,30 @@ function extractEntertainmentSportsTopics(title){
     .filter(s=>!CLOUD_TOPIC_STOP_RE.test(s)))].slice(0,4);
 }
 
+function llmWordCloudData(catKey, isProduct){
+  const clouds = STATE.llmInsights?.content?.wordClouds;
+  if(!clouds) return null;
+  const source = catKey === 'ALL'
+    ? (isProduct ? clouds.product : clouds.topic)
+    : clouds.category?.[catKey];
+  if(!Array.isArray(source) || !source.length) return null;
+  return source.map(item=>({
+    name: item.word || item.name,
+    value: Number(item.weight || item.value || 10),
+    src: 'LLM',
+    times: 1,
+    type: item.type || (isProduct ? 'product' : 'topic')
+  })).filter(item=>item.name).slice(0,80);
+}
+
 function buildCloudData(lists, catKey, isProduct){
+  const llmData = llmWordCloudData(catKey, isProduct);
+  if(llmData) return llmData;
   const dict = isProduct ? PRODUCT_LIST : TOPIC_LIST;
   const m = new Map();
   lists.forEach(l=>{
     l.items.forEach(it=>{
-      if(catKey!=='ALL' && categorize(it.title)!==catKey) return;
+      if(catKey!=='ALL' && categorize(it.title, l.listName)!==catKey) return;
       if(!isProduct && shouldSkipTopicCloudTitle(it.title)) return;
       const weight = Math.max(parseMetric(it.metric)||5e4, 1e4);
       const hits = isProduct
@@ -1321,7 +1347,7 @@ function getDailyItems(catKey, kind='all'){
   const sourceLists = kind==='hot' ? STATE.hotLists : kind==='shop' ? STATE.shopLists : [...(STATE.hotLists||[]), ...(STATE.shopLists||[])];
   const rows = [];
   sourceLists.forEach(l=>l.items.forEach(it=>{
-    const itemCat = categorize(it.title);
+    const itemCat = categorize(it.title, l.listName);
     if(catKey!=='ALL' && itemCat!==catKey) return;
     rows.push({
       ...it,
