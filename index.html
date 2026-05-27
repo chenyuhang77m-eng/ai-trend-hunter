@@ -236,10 +236,7 @@
   .strategy-parts{display:grid;gap:8px}
   .strategy-part{border:1px solid rgba(13,12,10,.16);background:linear-gradient(180deg,rgba(255,255,255,.48),rgba(246,239,227,.5));padding:9px 11px;border-radius:8px}
   .strategy-tag{display:inline-block;margin-right:7px;padding:2px 7px;border-radius:999px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:var(--accent)}
-  .strategy-part[data-kind="投放"]{background:rgba(26,77,63,.08);border-color:rgba(26,77,63,.2)}
-  .strategy-part[data-kind="投放"] .strategy-tag{background:var(--accent-2)}
   .strategy-quote{background:rgba(217,156,43,.2);box-shadow:inset 0 -5px rgba(217,156,43,.24);padding:0 3px;border-radius:3px;font-weight:700}
-  .strategy-channel{display:inline-block;margin:0 2px;padding:1px 5px;border-radius:999px;background:rgba(26,77,63,.11);color:var(--accent-2);font-family:"JetBrains Mono",monospace;font-size:11px}
   .mkt-kicker{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
   .mkt-kicker::before{content:"";width:18px;height:1px;background:currentColor;opacity:.7}
   .mkt-note{display:inline-block;margin-top:10px;padding:4px 8px;border:1px solid rgba(26,77,63,.18);background:rgba(26,77,63,.06);color:var(--accent-2);font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em}
@@ -431,7 +428,7 @@
     </div>
     <div class="insight" id="insightMkt">
       <div class="tag"><div class="t1">Strategy</div><div class="t2">🎯</div></div>
-      <div class="body"><div class="lead">基于今日全网热搜话题与电商爆款 SKU 的交叉信号,为 <b>八大品类</b> 输出可落地的营销 playbook ——每个品类按 <em>4-5 个二级品类 × 营销场景 × 话题钩子 × 投放策略</em> 拆解。<b>切换下方品类 tab 查看对应行业建议</b>。</div><ul><li>话题钩子来自当日真实热搜词</li><li>策略颗粒度到「内容形式 + 投放阵地 + 创意角度」</li><li>每日随热点自动刷新</li></ul></div>
+      <div class="body"><div class="lead">基于今日全网热搜话题与电商爆款 SKU 的交叉信号,为 <b>八大品类</b> 输出可落地的营销 playbook ——每个品类按 <em>3-5 个二级品类 × 营销场景 × 话题钩子 × 内容策略</em> 拆解。<b>切换下方品类 tab 查看对应行业建议</b>。</div><ul><li>话题钩子来自当日真实热搜词</li><li>策略颗粒度到「内容形式 + 创意角度 + 货品承接」</li><li>每日随热点自动刷新</li></ul></div>
     </div>
     <div class="cat-tabs" id="mktTabs"></div>
     <div id="mktContent"></div>
@@ -660,7 +657,7 @@ function buildHotInsight(hotLists, catKey){
   }
   const items = topItemsByCat(hotLists, catKey, 50);
   const total = items.length;
-  if(!total) return {lead:`今日五大热搜榜中,<em>「${escHtml(CAT_BY_KEY[catKey].name)}」</em>品类暂无明显话题——可能该品类<em>不是今日舆论焦点</em>,适合做<b>错峰内容投放</b>。`, items:[]};
+  if(!total) return {lead:`今日五大热搜榜中,<em>「${escHtml(CAT_BY_KEY[catKey].name)}」</em>品类暂无明显话题——可能该品类<em>不是今日舆论焦点</em>,适合做<b>错峰内容占位</b>。`, items:[]};
   const top = items[0];
   const platforms = [...new Set(items.map(x=>x.src))];
   let lead = catKey==='ALL'
@@ -915,7 +912,7 @@ const TOPIC_DICT = [
   '美团','大众点评','饿了么','美团外卖','拼好饭','团购','到店餐饮','本地生活',
   '携程','飞猪','去哪儿','马蜂窝','酒+景套餐','机票直降','火车票抢票','春运抢票','五一出游','国庆出游',
   '闲鱼','转转','二手回收','以旧换新','京东以旧换新','家电以旧换新','汽车以旧换新',
-  '抖音电商','快手电商','小红书种草','视频号','直播带货','千川投放','达人探店',
+  '抖音电商','快手电商','小红书种草','视频号','直播带货','千川内容','达人探店',
   '618','双十一','38大促','99划算节','双12','年货节',
 ];
 
@@ -1229,7 +1226,7 @@ function renderNarratives(latest, snaps, resonance, ng){
   const shopItems = latest.lists.filter(l=>l.category==='shopping').reduce((s,l)=>s+l.items.length,0);
   const hotItems = totalItems - shopItems;
   let n2 = `近 <b>${days}</b> 天走势图揭示一个规律:工作日舆情型平台(微博、百度)放量明显,周末电商榜单上扬。`;
-  n2 += `今日热搜 <b>${hotItems}</b> 条 vs 电商热销 <b>${shopItems}</b> 条,${hotItems>shopItems?'舆情更活跃,适合做<em>事件型借势营销</em>。':'电商榜更密集,购物决策窗口正在打开,适合做<em>转化型场景投放</em>。'}`;
+  n2 += `今日热搜 <b>${hotItems}</b> 条 vs 电商热销 <b>${shopItems}</b> 条,${hotItems>shopItems?'舆情更活跃,适合做<em>事件型借势营销</em>。':'电商榜更密集,购物决策窗口正在打开,适合做<em>转化型场景承接</em>。'}`;
   n2 += `结合"3日新晋商品/品牌"(<b>${ng.newCount}</b>)与"3日退榜商品/品牌"(<b>${ng.goneCount}</b>),可以从电商货架的<em>SKU 进出</em>识别真实购买力的流向。`;
   document.getElementById('narr1').innerHTML = n1;
   document.getElementById('narr2').innerHTML = n2;
@@ -1250,7 +1247,7 @@ function buildTrendInsight(latest, snaps, resonance, ng){
 
 /* ============ MARKETING PLAYBOOK · 8 大品类 × 4-5 二级品类 ============ */
 /*
-  每行结构: { sub: 二级品类, scene: 营销场景, topics: [话题钩子], strategy: 投放策略建议 }
+  每行结构: { sub: 二级品类, scene: 营销场景, topics: [话题钩子], strategy: 内容策略建议 }
   topics 中的词若命中今日真实热搜/电商榜单,前端会高亮(.chip.live)
 */
 const MKT_PLAYBOOK = {
@@ -1435,20 +1432,19 @@ function uniqItems(arr, n=5){
 
 function formatStrategyBody(body){
   return body
-    .replace(/「([^」]+)」/g, '「<span class="strategy-quote">$1</span>」')
-    .replace(/(抖音电商|抖音搜索|抖音企业号|抖音|巨量引擎|巨量星图|字节品牌广告|今日头条|西瓜视频|懂车帝|红果短剧)/g, '<span class="strategy-channel">$1</span>');
+    .replace(/「([^」]+)」/g, '「<span class="strategy-quote">$1</span>」');
 }
 
 function renderStrategyText(text, isPlain){
   const raw = String(text || '').trim();
   if(!raw) return '';
-  const normalized = raw.replace(/【(重点|投放)】/g, '\n【$1】').trim();
+  const normalized = raw.replace(/【重点】/g, '\n【重点】').replace(/【投放】[^。！？]*(?:。|$)/g, '').trim();
   const parts = normalized.split(/\n+/).map(s=>s.trim()).filter(Boolean);
-  if(!parts.some(p=>/^【(重点|投放)】/.test(p))){
+  if(!parts.some(p=>/^【重点】/.test(p))){
     return isPlain ? formatStrategyBody(escHtml(raw)) : raw;
   }
   return `<div class="strategy-parts">${parts.map(part=>{
-    const m = part.match(/^【(重点|投放)】\s*(.*)$/);
+    const m = part.match(/^【(重点)】\s*(.*)$/);
     if(!m) return `<div class="strategy-part">${isPlain ? formatStrategyBody(escHtml(part)) : part}</div>`;
     const body = isPlain ? formatStrategyBody(escHtml(m[2])) : m[2];
     return `<div class="strategy-part" data-kind="${escHtml(m[1])}"><span class="strategy-tag">${escHtml(m[1])}</span>${body}</div>`;
@@ -1489,19 +1485,6 @@ function pickRowSignals(row, signals, rowIndex){
   // 关键修复:命中不到本 row 的 sub/topics 时,**不再用全类目 topSignal 漫灌**,直接返回空
   // 让上游决策"今日本 sub 暂无强信号"的常青策略,避免跨 sub 串话(如 K12 行被塞美团/携程)
   return uniqItems(matched, 4);
-}
-
-function channelForCat(catKey){
-  return {
-    C3:'抖音科技榜、巨量引擎数码兴趣人群、巨量星图测评达人、抖音电商商品卡',
-    HOME:'抖音家装案例、巨量引擎家居兴趣人群、巨量星图家居达人、今日头条家装内容流',
-    APPL:'抖音家电榜、巨量引擎家电人群包、巨量星图测评达人、抖音电商商品卡',
-    BABY:'抖音育儿达人、巨量星图母婴达人、巨量引擎宝妈人群、抖音电商母婴货架',
-    FOOD:'抖音美食榜、巨量星图美食达人、巨量引擎本地生活人群、抖音电商食品货架',
-    BEAU:'抖音美妆测评、巨量星图美妆达人、巨量引擎美妆人群、抖音电商品牌直播',
-    CLOT:'抖音穿搭达人、巨量星图时尚达人、巨量引擎服饰人群、抖音电商服饰货架',
-    EDU:'抖音教育/同城、巨量引擎线索人群、巨量星图知识达人、今日头条信息流'
-  }[catKey] || '抖音、巨量引擎、巨量星图、字节品牌广告、红果短剧';
 }
 
 function actionForMode(mode){
@@ -1591,7 +1574,7 @@ function strategyForRow(row, topics, topHot, topShop){
     : `结合「${escHtml(row.scene)}」的日常场景`;
   const ideaText = escHtml(contentIdeasForRow(row).slice(0,3).join('、') || (topics||[]).slice(0,3).join('、') || `${row.sub}选购清单、真实体验对比`);
   const productText = topShop ? '，用热销 SKU 做案例露出和卖点验证' : '';
-  return `【重点】主打${escHtml(benefit)}的卖点，${sceneText}，输出「${ideaText}」等内容创意；内容重点突出场景痛点、预算分层和真实体验，让${escHtml(row.sub)}的选择理由更具体${productText}。【投放】抖音首发，巨量引擎小额放大，巨量星图匹配垂类达人。`;
+  return `【重点】主打${escHtml(benefit)}的卖点，${sceneText}，输出「${ideaText}」等内容创意；内容重点突出场景痛点、预算分层和真实体验，让${escHtml(row.sub)}的选择理由更具体${productText}。`;
 }
 
 function buildDynamicMktRows(catKey){
@@ -1730,8 +1713,8 @@ function renderMktTable(rows, isAll){
   // 把今日实际命中的话题(出现在 latest 数据里)用 .live 高亮
   const liveTopics = collectLiveTopics();
   const head = isAll
-    ? `<div class="mkt-row head"><div>品类 / 二级</div><div>营销场景</div><div>热点词 / 话题词</div><div>投放策略</div></div>`
-    : `<div class="mkt-row head"><div>二级品类</div><div>营销场景</div><div>热点词 / 话题词</div><div>投放策略</div></div>`;
+    ? `<div class="mkt-row head"><div>品类 / 二级</div><div>营销场景</div><div>热点词 / 话题词</div><div>内容策略</div></div>`
+    : `<div class="mkt-row head"><div>二级品类</div><div>营销场景</div><div>热点词 / 话题词</div><div>内容策略</div></div>`;
   const body = rows.map(r=>{
     const subText = isAll
       ? `<div class="mkt-sub">${escHtml(r._cat)}<small>${escHtml(r.sub)}</small></div>`
