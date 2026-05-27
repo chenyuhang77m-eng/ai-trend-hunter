@@ -452,6 +452,7 @@ const REPO_BASE = IS_LOCAL_PREVIEW
   : 'https://raw.githubusercontent.com/chenyuhang77m-eng/top-rank-tracker/main';
 const URL_INDEX  = REPO_BASE + '/data/index.json';
 const URL_INSIGHTS = REPO_BASE + '/data/insights/latest.json';
+const URL_WORDCLOUDS = REPO_BASE + '/data/wordclouds/latest.json';
 const dayUrl = (d)=> REPO_BASE + `/data/${d}.json`;
 
 /* ============ 8 大品类(用户体系) ============ */
@@ -532,6 +533,7 @@ const STATE = {
   hotCat:'ALL', shopCat:'ALL', cloudCat:'ALL', mktCat:'C3',
   hotLists:[], shopLists:[],
   llmInsights:null,
+  llmWordClouds:null,
 };
 
 /* ============ CATEGORY TAB BAR ============ */
@@ -1105,7 +1107,7 @@ function extractEntertainmentSportsTopics(title){
 }
 
 function llmWordCloudData(catKey, isProduct){
-  const clouds = STATE.llmInsights?.content?.wordClouds;
+  const clouds = STATE.llmWordClouds?.wordClouds;
   if(!clouds) return null;
   const source = catKey === 'ALL'
     ? (isProduct ? clouds.product : clouds.topic)
@@ -1795,6 +1797,14 @@ async function main(){
       else console.warn('Insight date does not match latest data date', insights?.date, latest.date);
     }catch(e){
       console.warn('LLM insights unavailable, using browser fallback', e);
+    }
+
+    try{
+      const wordClouds = await getJSON(URL_WORDCLOUDS);
+      if(wordClouds?.date === latest.date) STATE.llmWordClouds = wordClouds;
+      else console.warn('Word cloud date does not match latest data date', wordClouds?.date, latest.date);
+    }catch(e){
+      console.warn('Generated word clouds unavailable, using browser fallback', e);
     }
 
     STATE.latest = latest;
