@@ -1103,21 +1103,74 @@ function extractEntertainmentSportsTopics(title){
     .filter(s=>!CLOUD_TOPIC_STOP_RE.test(s)))].slice(0,4);
 }
 
+function rankBandScore(rank){
+  const n = Number(rank) || 99;
+  if(n <= 3) return 100;
+  if(n <= 10) return 62;
+  return 34;
+}
+function cloudRankMetaFromSources(sources=[]){
+  let bestRank = 99;
+  const matched = [];
+  const lists = [...STATE.hotLists, ...STATE.shopLists];
+  sources.forEach(src=>{
+    const title = typeof src === 'string' ? src : src?.title;
+    if(!title) return;
+    for(const l of lists){
+      const item = (l.items || []).find(it=>it.title === title);
+      if(!item) continue;
+      const rank = Number(item.rank) || 99;
+      bestRank = Math.min(bestRank, rank);
+      if(matched.length < 4) matched.push({sourceName:l.sourceName, listName:l.listName, title:item.title, rank:item.rank});
+      break;
+    }
+  });
+  return {bestRank, value: rankBandScore(bestRank), sources: matched};
+}
+function normalizeCloudItems(items=[], isProduct){
+  return items.map(item=>{
+    const meta = cloudRankMetaFromSources(item.sources || []);
+    const sources = meta.sources.length ? meta.sources : (Array.isArray(item.sources) ? item.sources : []);
+    return {
+      name: item.word || item.name,
+      value: meta.value,
+      bestRank: meta.bestRank,
+      src: sources.length ? sources.map(s=>`${s.sourceName || ''}:${s.title || s}`).join(' / ') : (STATE.llmWordClouds?.wordCloudSource || 'LLM'),
+      sources,
+      times: sources.length || 1,
+      type: item.type || (isProduct ? 'product' : 'topic')
+    };
+  }).filter(item=>item.name).sort((a,b)=>b.value-a.value || a.bestRank-b.bestRank || a.name.localeCompare(b.name,'zh-CN'));
+}
+function balancedCloudFromCategories(categoryMap, isProduct){
+  const cats = CAT_KEYS.filter(k=>k!=='ALL' && Array.isArray(categoryMap?.[k]) && categoryMap[k].length);
+  const out = [];
+  const seen = new Set();
+  for(let round=0; round<12 && out.length<80; round++){
+    for(const cat of cats){
+      const item = categoryMap[cat][round];
+      const name = item?.word || item?.name;
+      if(!name || seen.has(name)) continue;
+      seen.add(name);
+      out.push({...item, categoryKey:cat});
+      if(out.length>=80) break;
+    }
+  }
+  return normalizeCloudItems(out, isProduct);
+}
 function llmWordCloudData(catKey, isProduct){
   const clouds = STATE.llmWordClouds?.wordClouds;
   if(!clouds) return null;
+  if(catKey === 'ALL'){
+    const categoryMap = isProduct ? clouds.productCategory : clouds.topicCategory;
+    const balanced = balancedCloudFromCategories(categoryMap, isProduct);
+    if(balanced.length) return balanced;
+  }
   const source = catKey === 'ALL'
     ? (isProduct ? clouds.product : clouds.topic)
     : (isProduct ? clouds.productCategory?.[catKey] : clouds.topicCategory?.[catKey]) || clouds.category?.[catKey];
   if(!Array.isArray(source) || !source.length) return null;
-  return source.map(item=>({
-    name: item.word || item.name,
-    value: Number(item.weight || item.value || 10),
-    src: item.sources?.length ? item.sources.map(s=>`${s.sourceName || ''}:${s.title || s}`).join(' / ') : (STATE.llmWordClouds?.wordCloudSource || 'LLM'),
-    sources: Array.isArray(item.sources) ? item.sources : [],
-    times: 1,
-    type: item.type || (isProduct ? 'product' : 'topic')
-  })).filter(item=>item.name).slice(0,80);
+  return normalizeCloudItems(source, isProduct).slice(0,80);
 }
 
 function buildCloudData(lists, catKey, isProduct){
@@ -1129,23 +1182,25 @@ function buildCloudData(lists, catKey, isProduct){
     l.items.forEach(it=>{
       if(catKey!=='ALL' && categorize(it.title, l.listName)!==catKey) return;
       if(!isProduct && shouldSkipTopicCloudTitle(it.title)) return;
-      const weight = Math.max(parseMetric(it.metric)||5e4, 1e4);
+      const weight = rankBandScore(it.rank);
       const hits = isProduct
         ? dictExtract(it.title, dict)
         : [...dictExtract(it.title, dict), ...extractEntertainmentSportsTopics(it.title)];
       const seen = new Set();
       hits.forEach(t=>{
         if(seen.has(t)) return; seen.add(t);
-        const cur = m.get(t) || {value:0, src:l.sourceName, sources:[], times:0,
+        const cur = m.get(t) || {value:0, bestRank:99, src:l.sourceName, sources:[], times:0,
                                   type: (isProduct && PRODUCT_BRANDS.includes(t)) ? 'brand' : (isProduct?'selling':'topic')};
-        cur.value += weight; cur.times += 1;
-        if(cur.sources.length < 4 && !cur.sources.some(s=>s.title===it.title)) cur.sources.push({sourceName:l.sourceName,listName:l.listName,title:it.title});
+        cur.value = Math.max(cur.value, weight);
+        cur.bestRank = Math.min(cur.bestRank, Number(it.rank) || 99);
+        cur.times += 1;
+        if(cur.sources.length < 4 && !cur.sources.some(s=>s.title===it.title)) cur.sources.push({sourceName:l.sourceName,listName:l.listName,title:it.title,rank:it.rank});
         m.set(t, cur);
       });
     });
   });
-  const arr = [...m.entries()].map(([name,o])=>({name, value:o.value, src:o.src, sources:o.sources, times:o.times, type:o.type}));
-  arr.sort((a,b)=>b.value-a.value);
+  const arr = [...m.entries()].map(([name,o])=>({name, value:o.value, bestRank:o.bestRank, src:o.src, sources:o.sources, times:o.times, type:o.type}));
+  arr.sort((a,b)=>b.value-a.value || a.bestRank-b.bestRank || a.name.localeCompare(b.name,'zh-CN'));
   return arr.slice(0,80);
 }
 
@@ -1166,7 +1221,8 @@ function renderCloud(divId, data, palette, chartRef){
         const sources = Array.isArray(p.data.sources) && p.data.sources.length
           ? p.data.sources.slice(0,4).map(s=>`${escHtml(s.sourceName||'')}${s.listName?` / ${escHtml(s.listName)}`:''}: ${escHtml(s.title||s)}`).join('<br/>')
           : escHtml(p.data.src || '');
-        return `<b style="color:${p.color};font-size:14px">${p.name}</b> ${typeLabel}<br/>来源词条:<br/>${sources}<br/>命中次数:${p.data.times}`;
+        const rankLabel = p.data.bestRank<=3 ? 'TOP 1-3' : p.data.bestRank<=10 ? 'TOP 4-10' : 'TOP 10+';
+        return `<b style="color:${p.color};font-size:14px">${p.name}</b> ${typeLabel}<br/>榜单排名层级:${rankLabel}<br/>来源词条:<br/>${sources}<br/>命中次数:${p.data.times}`;
       }},
     series:[{
       type:'wordCloud',shape:'circle',left:'center',top:'center',
