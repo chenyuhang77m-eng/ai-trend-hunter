@@ -1690,7 +1690,7 @@ function buildDynamicMktRows(catKey){
 }
 
 function categoryFocusLabels(catKey, rows, signals){
-  const text = `${(rows||[]).map(r=>`${r.sub||''} ${r.scene||''} ${(r.hotTerms||[]).join(' ')}`).join(' ')} ${(signals.hot||[]).map(x=>x.title).join(' ')}`;
+  const text = `${(rows||[]).map(r=>`${r.sub||''} ${r.scene||''} ${(r.hotTerms||[]).join(' ')}`).join(' ')} ${(signals.all||[]).map(x=>x.title).join(' ')}`;
   const banks = {
     C3:[[/AI|DeepSeek|大模型|算力|芯片/i,'AI技术'],[/游戏|王者|电竞|RTX/i,'游戏娱乐'],[/手机|iPhone|华为|小米/i,'换机决策'],[/影像|相机|大疆|Vlog/i,'影像创作']],
     HOME:[[/装修|整装|局改|厨卫|卫浴/i,'局部改造'],[/收纳|软装|家居/i,'居家效率'],[/清洁|纸巾|洗衣/i,'家庭清洁'],[/助眠|床垫|寝具/i,'换季舒适']],
@@ -1721,10 +1721,18 @@ function marketingCategoryLead(catKey, signals, rows){
   const catName = CAT_BY_KEY[catKey]?.name || '全部';
   const labels = categoryFocusLabels(catKey, rows, signals);
   const focus = labels.length ? labels.join('、') : (rows||[]).slice(0,3).map(r=>r.sub).join('、');
-  if((signals.hot||[]).length){
-    return `今日${escHtml(catName)}类热点集中在${escHtml(focus)}，用户对${escHtml(categoryConcern(catKey))}关注度提升，可绑定热点做场景化内容种草。`;
+  const hasHot = (signals.hot||[]).length > 0;
+  const hasShop = (signals.shop||[]).length > 0;
+  if(hasHot && hasShop){
+    return `今日${escHtml(catName)}类同时出现热搜话题和热销商品信号，焦点集中在${escHtml(focus)}；内容端可绑定热点做种草，货架端用热销 SKU 验证卖点和转化承接。`;
   }
-  return `今日${escHtml(catName)}类暂无强热搜信号，内容可聚焦${escHtml(focus)}等常青场景，用具体卖点和选购清单承接搜索需求。`;
+  if(hasShop){
+    return `今日${escHtml(catName)}类热搜声量不强，但电商热销信号明确，主要集中在${escHtml(focus)}；营销应优先放大商品卖点、真实体验和选购清单，用货架热度反推内容选题。`;
+  }
+  if(hasHot){
+    return `今日${escHtml(catName)}类热搜话题集中在${escHtml(focus)}，用户对${escHtml(categoryConcern(catKey))}关注度提升，可先绑定热点做场景化内容种草，再观察商品承接。`;
+  }
+  return `今日${escHtml(catName)}类暂无明显热搜或热销信号，内容可聚焦${escHtml(focus)}等常青场景，用具体卖点和选购清单承接搜索需求。`;
 }
 
 function buildMktInsight(catKey){
@@ -1732,11 +1740,6 @@ function buildMktInsight(catKey){
   if(catKey==='ALL' && llm?.summary){
     return llmModuleBrief('marketing') || {lead:escHtml(llm.summary.lead), items:(llm.summary.bullets||[]).map(escHtml)};
   }
-  const llmCat = llm?.categories?.[catKey];
-  if(llmCat){
-    return {lead:escHtml(llmCat.lead), items:(llmCat.bullets||[]).map(escHtml)};
-  }
-
   const signals = mktSignals(catKey);
   const catName = CAT_BY_KEY[catKey]?.name || '全部';
   if(catKey==='ALL'){
@@ -1750,6 +1753,10 @@ function buildMktInsight(catKey){
     return {lead, items: rankedCats.map(x=>`${x.name}:${x.count} 条信号`)};
   }
   if(!signals.all.length){
+    const llmCat = llm?.categories?.[catKey];
+    if(llmCat){
+      return {lead:escHtml(llmCat.lead), items:(llmCat.bullets||[]).map(escHtml)};
+    }
     return {lead:`「${escHtml(catName)}」今日没有明显热搜或热销信号,营销建议会回到常青场景,适合小预算素材测试与私域维护。`, items:[]};
   }
   const rows = buildDynamicMktRows(catKey);
