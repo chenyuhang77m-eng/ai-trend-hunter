@@ -295,7 +295,7 @@
     <h1><span class="stroke">AI</span><span class="alt">热点</span><i>捕</i><span style="color:var(--accent)">手.</span></h1>
     <div class="hero-sub">
       <p class="hero-deck">
-        从 <b>微博 / 百度 / 夸克 / 抖音 / 爱奇艺</b> 五大热搜,到 <b>淘宝天猫 / 京东 / 快手电商 / 今日热卖</b> 四大电商榜单。
+        从 <b>微博 / 百度 / 夸克 / 抖音 / 爱奇艺 / 360</b> 六大热搜,到 <b>淘宝天猫 / 京东 / 快手电商 / 今日热卖</b> 四大电商榜单。
         每日同步,按 <b>3C数码 / 家居家装 / 家电 / 母婴 / 食品 / 美妆 / 服饰 / 平台教育</b> 八大品类自动归类、筛选与可视化。
       </p>
       <div class="hero-byline">
@@ -405,7 +405,7 @@
         <div class="badge">话题词 · Topics</div>
         <div class="pcard-head" style="border:none;padding:0;margin-bottom:10px">
           <h3 style="font-family:Fraunces;font-style:italic;font-weight:800;font-size:22px">💬 热搜话题词云</h3>
-          <div class="meta" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">微博/百度/夸克/抖音/爱奇艺</div>
+          <div class="meta" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">微博/百度/夸克/抖音/爱奇艺/360</div>
         </div>
         <div id="cloudTopics" class="chart xl"></div>
       </div>
@@ -672,11 +672,11 @@ function buildHotInsight(hotLists, catKey){
   }
   const items = topItemsByCat(hotLists, catKey, 50);
   const total = items.length;
-  if(!total) return {lead:`今日五大热搜榜中,<em>「${escHtml(CAT_BY_KEY[catKey].name)}」</em>品类暂无明显话题——可能该品类<em>不是今日舆论焦点</em>,适合做<b>错峰内容占位</b>。`, items:[]};
+  if(!total) return {lead:`今日六大热搜榜中,<em>「${escHtml(CAT_BY_KEY[catKey].name)}」</em>品类暂无明显话题——可能该品类<em>不是今日舆论焦点</em>,适合做<b>错峰内容占位</b>。`, items:[]};
   const top = items[0];
   const platforms = [...new Set(items.map(x=>x.src))];
   let lead = catKey==='ALL'
-    ? `今日五大热搜榜共 <b>${total}</b> 条词条,单条最高热度 <em>「${escHtml(top.title)}」</em>(${escHtml(top.metric)},来自${escHtml(top.src)})。`
+    ? `今日六大热搜榜共 <b>${total}</b> 条词条,单条最高热度 <em>「${escHtml(top.title)}」</em>(${escHtml(top.metric)},来自${escHtml(top.src)})。`
     : `「${CAT_BY_KEY[catKey].name}」品类今日上榜 <b>${total}</b> 条话题,覆盖 <b>${platforms.length}</b> 个平台,最热为 <em>「${escHtml(top.title)}」</em>(${escHtml(top.metric)})。`;
   const tech = items.filter(x=>/AI|大模型|芯片|GPT|DeepSeek|英伟达|科技|发布/.test(x.title)).length;
   const social = items.filter(x=>/逝世|事件|曝光|被|致|警方|通报/.test(x.title)).length;
