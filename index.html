@@ -295,7 +295,7 @@
     <h1><span class="stroke">AI</span><span class="alt">热点</span><i>捕</i><span style="color:var(--accent)">手.</span></h1>
     <div class="hero-sub">
       <p class="hero-deck">
-        从 <b>微博 / 百度 / 夸克 / 抖音 / 360</b> 五大热搜,到 <b>淘宝天猫 / 京东 / 快手电商 / 今日热卖</b> 四大电商榜单。
+        从 <b>微博 / 百度 / 夸克 / 抖音 / 爱奇艺</b> 五大热搜,到 <b>淘宝天猫 / 京东 / 快手电商 / 今日热卖</b> 四大电商榜单。
         每日同步,按 <b>3C数码 / 家居家装 / 家电 / 母婴 / 食品 / 美妆 / 服饰 / 平台教育</b> 八大品类自动归类、筛选与可视化。
       </p>
       <div class="hero-byline">
@@ -405,7 +405,7 @@
         <div class="badge">话题词 · Topics</div>
         <div class="pcard-head" style="border:none;padding:0;margin-bottom:10px">
           <h3 style="font-family:Fraunces;font-style:italic;font-weight:800;font-size:22px">💬 热搜话题词云</h3>
-          <div class="meta" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">微博/百度/夸克/抖音/360</div>
+          <div class="meta" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">微博/百度/夸克/抖音/爱奇艺</div>
         </div>
         <div id="cloudTopics" class="chart xl"></div>
       </div>
@@ -562,10 +562,15 @@ function renderCatTabs(containerId, currentKey, counts, onChange){
 }
 
 /* ============ FILTER LISTS BY CATEGORY ============ */
+const HOME_LIST_ITEM_LIMIT = 10;
+const CATEGORY_LIST_ITEM_LIMIT = 10;
+
 function filterListsByCat(lists, catKey){
-  if(catKey==='ALL') return lists.map(l=>({...l, items:l.items.slice(0,10)}));
+  if(catKey==='ALL') return lists.map(l=>({...l, items:l.items.slice(0, HOME_LIST_ITEM_LIMIT)}));
   return lists.map(l=>{
-    const items = l.items.filter(it=>categorize(it.title, l.listName)===catKey).slice(0,10);
+    const items = l.items
+      .filter(it=>categorize(it.title, l.listName)===catKey)
+      .slice(0, CATEGORY_LIST_ITEM_LIMIT);
     return {...l, items, _filteredCount:items.length};
   });
 }
