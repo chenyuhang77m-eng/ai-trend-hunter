@@ -541,6 +541,7 @@ const STATE = {
   hotLists:[], shopLists:[],
   llmInsights:null,
   llmWordClouds:null,
+  calendarContext:null,
 };
 
 /* ============ CATEGORY TAB BAR ============ */
@@ -1316,6 +1317,144 @@ function buildTrendInsight(latest, snaps, resonance, ng){
   return {lead, items:[`走势图按平台聚合每日总热度`,`共振词反映跨圈层穿透力`,`新晋/退榜识别 SKU 进出货架的动态`,`双词云对照话题与商品/品牌`]};
 }
 
+/* ============ CALENDAR CONTEXT · 节日 / 季节 / 大促节点 ============ */
+function parseLocalDate(dateStr){
+  const m = String(dateStr || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return new Date();
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+function dateKey(date){
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${mm}-${dd}`;
+}
+
+function daysFrom(date, mmdd){
+  const [m, d] = mmdd.split('-').map(Number);
+  const target = new Date(date.getFullYear(), m - 1, d);
+  return Math.round((date - target) / 86400000);
+}
+
+function inDateWindow(date, start, end){
+  const key = dateKey(date);
+  return start <= end ? key >= start && key <= end : key >= start || key <= end;
+}
+
+function calendarNode(name, label, cats, keywords, windowText, weight=1){
+  return {name, label, cats, keywords, windowText, weight};
+}
+
+function buildCalendarContext(dateStr){
+  const date = parseLocalDate(dateStr);
+  const month = date.getMonth() + 1;
+  const nodes = [];
+  const add = (...items)=>nodes.push(...items);
+  const childDayOffset = Math.abs(daysFrom(date, '06-01'));
+
+  if(childDayOffset <= 10){
+    const label = childDayOffset === 0 ? '六一儿童节当天' : childDayOffset < 0 ? '六一儿童节预热期' : '六一儿童节后延续期';
+    add(calendarNode('儿童节', label, ['BABY','FOOD','CLOT','EDU'], ['儿童节','六一','亲子','儿童礼物','童装','玩具','绘本','亲子出行'], '六一节点', 1.8));
+  }
+  if(inDateWindow(date, '05-20', '06-20')){
+    add(calendarNode('618', '618 大促期', ['C3','APPL','BABY','BEAU','CLOT','FOOD','HOME'], ['618','年中大促','囤货','满减','国补','礼赠'], '618 大促', 1.3));
+  }
+  if(month >= 6 && month <= 8){
+    add(calendarNode('夏季', '夏季消费窗口', ['APPL','FOOD','BEAU','CLOT','BABY','EDU'], ['夏季','暑期','高温','防晒','解暑','透气','出游','亲子出行'], '夏季/暑期', 1.2));
+  }
+  if(inDateWindow(date, '08-15', '09-10')){
+    add(calendarNode('开学季', '开学季', ['C3','BABY','EDU','CLOT'], ['开学','幼小衔接','学习机','文具','书包','校服','宿舍'], '开学季', 1.4));
+  }
+  if(inDateWindow(date, '09-20', '10-07')){
+    add(calendarNode('国庆', '国庆黄金周', ['EDU','CLOT','FOOD','C3','BEAU'], ['国庆','黄金周','旅行','亲子游','国潮','户外','伴手礼'], '国庆黄金周', 1.5));
+  }
+  if(inDateWindow(date, '01-15', '02-20')){
+    add(calendarNode('春节', '春节年货期', ['FOOD','CLOT','BEAU','HOME','BABY','C3'], ['春节','年货','拜年','团圆','礼盒','新年穿搭','亲子拜年'], '春节年货', 1.6));
+  }
+  if(inDateWindow(date, '11-01', '11-12')){
+    add(calendarNode('双11', '双11 大促期', ['C3','APPL','BEAU','CLOT','FOOD','HOME','BABY'], ['双11','大促','预售','尾款','囤货','爆品'], '双11 大促', 1.4));
+  }
+  return {
+    date,
+    label: nodes.map(n=>n.label).join(' / '),
+    nodes,
+    forCat(catKey){ return nodes.filter(n=>n.cats.includes(catKey)); }
+  };
+}
+
+function calendarRowsForCat(catKey){
+  const nodes = STATE.calendarContext?.forCat?.(catKey) || [];
+  if(!nodes.length) return [];
+  const has = name => nodes.some(n=>n.name === name);
+  const rows = [];
+  if(catKey === 'BABY' && has('儿童节')){
+    rows.push(
+      {sub:'儿童节礼赠', scene:'六一礼物 / 成长陪伴', topics:['儿童节','六一','儿童礼物','益智玩具','亲子陪伴'], strategy:'【重点】围绕「<em>六一儿童节</em>」把礼物从单纯购买转成成长陪伴方案,输出 <b>分龄礼物清单、亲子开箱、预算分层</b> 内容,承接玩具、绘本、学习机和童装礼赠需求。', _calendar:true, _calendarTags:['儿童节']},
+      {sub:'亲子出行装备', scene:'儿童节后 / 暑期亲子游', topics:['亲子出行','儿童防晒','安全座椅','推车','儿童水杯'], strategy:'【重点】承接「<em>六一后亲子出游</em>」和暑期计划,做 <b>半日游装备清单、儿童防晒补水、安全座椅实测</b>,把安全安心和省心准备讲具体。', _calendar:true, _calendarTags:['儿童节','夏季']}
+    );
+  }
+  if(catKey === 'BABY' && has('夏季')){
+    rows.push({sub:'夏季婴童护理', scene:'高温护理 / 红屁屁防护', topics:['夏季','透气','红屁屁','湿巾','驱蚊'], strategy:'【重点】抓住夏季高温和梅雨闷热,输出「纸尿裤透气横评、户外驱蚊避坑、洗护湿巾成分清单」,强化安全成分和真实体验。', _calendar:true, _calendarTags:['夏季']});
+  }
+  if(catKey === 'FOOD' && has('夏季')){
+    rows.push({sub:'夏季解暑饮品', scene:'高温通勤 / 亲子补水', topics:['高温','解暑','电解质水','低糖饮料','冰品'], strategy:'【重点】结合夏季高温,做便利店冰柜盲测、亲子补水清单和低糖饮品成分对比,让饮品从口味选择变成场景解决方案。', _calendar:true, _calendarTags:['夏季']});
+  }
+  if(catKey === 'CLOT' && has('夏季')){
+    rows.push({sub:'亲子防晒穿搭', scene:'暑期出游 / 户外防晒', topics:['防晒衣','防晒帽','亲子装','凉感','UPF50+'], strategy:'【重点】围绕夏季户外和亲子出游,拍「大人小孩一套防晒装备」,对比凉感、遮蔽面积、收纳便携和穿搭效果。', _calendar:true, _calendarTags:['夏季']});
+  }
+  if(catKey === 'BEAU' && has('夏季')){
+    rows.push({sub:'夏季防晒修护', scene:'通勤暴晒 / 旅行补涂', topics:['防晒','晒后修护','补涂','清爽肤感','美白'], strategy:'【重点】把夏季防晒拆成通勤、户外和旅行三类场景,用补涂不搓泥、晒后修护和肤感对比降低购买决策成本。', _calendar:true, _calendarTags:['夏季']});
+  }
+  if(catKey === 'EDU' && (has('夏季') || has('开学季'))){
+    rows.push({sub:'暑期成长计划', scene:'暑期续报 / 开学衔接', topics:['暑期','开学','幼小衔接','学习机','分级阅读'], strategy:'【重点】用暑期计划表、分龄阅读清单和学习工具实测承接家长焦虑,把课程、图书和学习硬件串成连续内容。', _calendar:true, _calendarTags:['夏季','开学季']});
+  }
+  if(catKey === 'APPL' && has('夏季')){
+    rows.push({sub:'降温清洁家电', scene:'高温降温 / 梅雨清洁', topics:['空调','风扇','除湿','洗地机','高温'], strategy:'【重点】结合夏季高温和梅雨,输出空调省电、除湿防霉、洗地机清洁实测,用真实场景解释换新价值。', _calendar:true, _calendarTags:['夏季']});
+  }
+  if(catKey === 'CLOT' && has('国庆')){
+    rows.push({sub:'国庆出游穿搭', scene:'黄金周旅行 / 国潮氛围', topics:['国庆','旅行穿搭','国潮','户外','亲子装'], strategy:'【重点】围绕国庆黄金周,做城市旅行、户外轻徒步和国潮打卡三套穿搭清单,让服饰从单品推荐变成行程方案。', _calendar:true, _calendarTags:['国庆']});
+  }
+  if(catKey === 'FOOD' && has('春节')){
+    rows.push({sub:'春节年货礼盒', scene:'拜年送礼 / 家庭团圆', topics:['春节','年货','礼盒','坚果','零食'], strategy:'【重点】按拜年对象和预算分层做年货礼盒清单,突出体面、健康和家庭分享场景。', _calendar:true, _calendarTags:['春节']});
+  }
+  return rows;
+}
+
+function calendarScoreForRow(catKey, row){
+  const nodes = STATE.calendarContext?.forCat?.(catKey) || [];
+  if(!nodes.length) return 0;
+  const text = `${row.sub||''} ${row.scene||''} ${(row.topics||[]).join(' ')} ${row.strategy||''}`;
+  return nodes.reduce((sum, node)=>{
+    const hits = node.keywords.reduce((s, kw)=>s + (text.includes(kw) ? 1 : 0), 0);
+    const tagHit = Array.isArray(row._calendarTags) && row._calendarTags.includes(node.name);
+    return sum + hits * node.weight + (tagHit ? 2 * node.weight : 0);
+  }, 0);
+}
+
+function calendarTopicLabels(catKey, row){
+  const nodes = STATE.calendarContext?.forCat?.(catKey) || [];
+  const text = `${row.sub||''} ${row.scene||''} ${(row.topics||[]).join(' ')}`;
+  return uniqList(nodes.flatMap(node=>{
+    const tagHit = Array.isArray(row._calendarTags) && row._calendarTags.includes(node.name);
+    const related = node.keywords.filter(kw=>text.includes(kw));
+    if(tagHit && related.length < 3) return uniqList([...related, ...node.keywords], 4);
+    return related;
+  }), 6);
+}
+
+function calendarLeadPrefix(catKey){
+  const nodes = STATE.calendarContext?.forCat?.(catKey) || [];
+  if(!nodes.length) return '';
+  return `叠加${nodes.map(n=>n.label).join('、')}，`;
+}
+
+function calendarStrategySuffix(catKey, row){
+  const labels = calendarTopicLabels(catKey, row).slice(0, 4);
+  const nodes = STATE.calendarContext?.forCat?.(catKey) || [];
+  if(!labels.length || !nodes.length) return '';
+  return ` 同时结合${nodes[0].windowText}节点,优先测试「${escHtml(labels.join('、'))}」相关标题和首图。`;
+}
+
 /* ============ MARKETING PLAYBOOK · 8 大品类 × 4-5 二级品类 ============ */
 /*
   每行结构: { sub: 二级品类, scene: 营销场景, topics: [话题钩子], strategy: 内容策略建议 }
@@ -1640,14 +1779,14 @@ function benefitForRow(row){
   return found ? found[1] : '解决用户痛点和提升购买决策效率';
 }
 
-function strategyForRow(row, topics, topHot, topShop){
+function strategyForRow(catKey, row, topics, topHot, topShop){
   const benefit = benefitForRow(row);
   const sceneText = topHot
     ? `结合「${escHtml(topHot.title)}」的讨论热度和「${escHtml(row.scene)}」场景`
     : `结合「${escHtml(row.scene)}」的日常场景`;
   const ideaText = escHtml(contentIdeasForRow(row).slice(0,3).join('、') || (topics||[]).slice(0,3).join('、') || `${row.sub}选购清单、真实体验对比`);
   const productText = topShop ? '，用热销 SKU 做案例露出和卖点验证' : '';
-  return `【重点】主打${escHtml(benefit)}的卖点，${sceneText}，输出「${ideaText}」等内容创意；内容重点突出场景痛点、预算分层和真实体验，让${escHtml(row.sub)}的选择理由更具体${productText}。`;
+  return `【重点】主打${escHtml(benefit)}的卖点，${sceneText}，输出「${ideaText}」等内容创意；内容重点突出场景痛点、预算分层和真实体验，让${escHtml(row.sub)}的选择理由更具体${productText}。${calendarStrategySuffix(catKey, row)}`;
 }
 
 function buildDynamicMktRows(catKey){
@@ -1664,28 +1803,29 @@ function buildDynamicMktRows(catKey){
       _plain:true
     }));
   }
-  const baseRows = MKT_PLAYBOOK[catKey] || [];
+  const baseRows = [...calendarRowsForCat(catKey), ...(MKT_PLAYBOOK[catKey] || [])];
   const signals = mktSignals(catKey);
   if(!baseRows.length) return [];
-  const scoreBaseRow = row => signals.all.reduce((sum,it)=>sum+(isRowHit(row,it)?Math.log10((it.val||1)+10):0),0);
+  const scoreBaseRow = row => signals.all.reduce((sum,it)=>sum+(isRowHit(row,it)?Math.log10((it.val||1)+10):0),0) + calendarScoreForRow(catKey, row);
   const scoredBaseRows = baseRows.map((row, idx)=>({row, idx, score:scoreBaseRow(row)}));
   const hasHits = scoredBaseRows.some(x=>x.score>0);
   const selectedRows = hasHits
-    ? scoredBaseRows.filter(x=>x.score>0).sort((a,b)=>b.score-a.score || a.idx-b.idx)
+    ? scoredBaseRows.filter(x=>x.score>0).sort((a,b)=>b.score-a.score || a.idx-b.idx).slice(0,5)
     : scoredBaseRows.slice(0,4);
 
   return selectedRows.map(({row, idx})=>{
     const picked = pickRowSignals(row, signals, idx);
     const pickedLabels = uniqList(picked.flatMap(topicLabelFromItem), 8);
     // 修复:不再把 signals.labels(全类目漫灌)塞进 row.topics
-    const sourceLabels = pickedLabels.length ? pickedLabels : (row.topics || []);
+    const seasonalLabels = calendarTopicLabels(catKey, row);
+    const sourceLabels = pickedLabels.length ? uniqList([...pickedLabels, ...seasonalLabels], 8) : uniqList([...seasonalLabels, ...(row.topics || [])], 8);
     const topics = creativeTopicIdeas(row, sourceLabels);
     const scenes = inferScenes(catKey, row, topics).slice(0,4);
     const topHot = picked.find(x=>x.listCategory==='hot-search' && isRowHit(row, x));
     const topShop = picked.find(x=>x.listCategory==='shopping' && isRowHit(row, x));
     const hasSignal = picked.length > 0;
-    const strategy = strategyForRow(row, topics, topHot, topShop);
-    return {...row, scenes, topics, strategy, _livePicked:picked};
+    const strategy = row._calendar ? row.strategy : strategyForRow(catKey, row, topics, topHot, topShop);
+    return {...row, scenes, topics:uniqList([...sourceLabels, ...topics], 5), strategy, _livePicked:picked};
   });
 }
 
@@ -1723,16 +1863,17 @@ function marketingCategoryLead(catKey, signals, rows){
   const focus = labels.length ? labels.join('、') : (rows||[]).slice(0,3).map(r=>r.sub).join('、');
   const hasHot = (signals.hot||[]).length > 0;
   const hasShop = (signals.shop||[]).length > 0;
+  const prefix = calendarLeadPrefix(catKey);
   if(hasHot && hasShop){
-    return `今日${escHtml(catName)}类同时出现热搜话题和热销商品信号，焦点集中在${escHtml(focus)}；内容端可绑定热点做种草，货架端用热销 SKU 验证卖点和转化承接。`;
+    return `今日${escHtml(catName)}类${prefix}同时出现热搜话题和热销商品信号，焦点集中在${escHtml(focus)}；内容端可绑定热点做种草，货架端用热销 SKU 验证卖点和转化承接。`;
   }
   if(hasShop){
-    return `今日${escHtml(catName)}类热搜声量不强，但电商热销信号明确，主要集中在${escHtml(focus)}；营销应优先放大商品卖点、真实体验和选购清单，用货架热度反推内容选题。`;
+    return `今日${escHtml(catName)}类${prefix}热搜声量不强，但电商热销信号明确，主要集中在${escHtml(focus)}；营销应优先放大商品卖点、真实体验和选购清单，用货架热度反推内容选题。`;
   }
   if(hasHot){
-    return `今日${escHtml(catName)}类热搜话题集中在${escHtml(focus)}，用户对${escHtml(categoryConcern(catKey))}关注度提升，可先绑定热点做场景化内容种草，再观察商品承接。`;
+    return `今日${escHtml(catName)}类${prefix}热搜话题集中在${escHtml(focus)}，用户对${escHtml(categoryConcern(catKey))}关注度提升，可先绑定热点做场景化内容种草，再观察商品承接。`;
   }
-  return `今日${escHtml(catName)}类暂无明显热搜或热销信号，内容可聚焦${escHtml(focus)}等常青场景，用具体卖点和选购清单承接搜索需求。`;
+  return `今日${escHtml(catName)}类${prefix}暂无明显热搜或热销信号，内容可聚焦${escHtml(focus)}等场景，用具体卖点和选购清单承接搜索需求。`;
 }
 
 function buildMktInsight(catKey){
@@ -1745,17 +1886,23 @@ function buildMktInsight(catKey){
   if(catKey==='ALL'){
     const rankedCats = CAT_KEYS.filter(k=>k!=='ALL').map(k=>{
       const s = mktSignals(k);
-      return {k, name:CAT_BY_KEY[k].name, count:s.all.length, top:s.top};
-    }).filter(x=>x.count).sort((a,b)=>b.count-a.count).slice(0,4);
+      const calendarWeight = (STATE.calendarContext?.forCat?.(k) || []).reduce((sum,n)=>sum+n.weight,0);
+      return {k, name:CAT_BY_KEY[k].name, count:s.all.length, top:s.top, calendarWeight};
+    }).filter(x=>x.count || x.calendarWeight).sort((a,b)=>(b.count + b.calendarWeight*3) - (a.count + a.calendarWeight*3)).slice(0,4);
     const lead = rankedCats.length
-      ? `今日营销建议已按实时榜单重算。声量最高的品类是 <b>${escHtml(rankedCats[0].name)}</b>,代表信号为 <em>「${escHtml(rankedCats[0].top.title)}」</em>;下方每个品类展示一条最适合今天先执行的动作。`
+      ? `今日营销建议已按实时榜单与日期节点重算。优先关注 <b>${escHtml(rankedCats[0].name)}</b>${rankedCats[0].top ? `,代表信号为 <em>「${escHtml(rankedCats[0].top.title)}」</em>` : ',由当前时令节点触发'};下方每个品类展示一条最适合今天先执行的动作。`
       : `今日榜单暂未命中明确消费品类,建议先观察全网大事件,避免强行关联商品。`;
-    return {lead, items: rankedCats.map(x=>`${x.name}:${x.count} 条信号`)};
+    return {lead, items: rankedCats.map(x=>`${x.name}:${x.count ? `${x.count} 条信号` : '时令节点命中'}`)};
   }
   if(!signals.all.length){
     const llmCat = llm?.categories?.[catKey];
     if(llmCat){
       return {lead:escHtml(llmCat.lead), items:(llmCat.bullets||[]).map(escHtml)};
+    }
+    const rows = buildDynamicMktRows(catKey);
+    const seasonalLead = calendarLeadPrefix(catKey);
+    if(seasonalLead && rows.length){
+      return {lead:`「${escHtml(catName)}」今日没有明显热搜或热销信号,但${seasonalLead}可先围绕${escHtml(rows.slice(0,3).map(r=>r.sub).join('、'))}做小预算素材测试与私域维护。`, items:[]};
     }
     return {lead:`「${escHtml(catName)}」今日没有明显热搜或热销信号,营销建议会回到常青场景,适合小预算素材测试与私域维护。`, items:[]};
   }
@@ -1876,6 +2023,7 @@ async function main(){
     }
 
     STATE.latest = latest;
+    STATE.calendarContext = buildCalendarContext(latest?.date || latestDate);
     STATE.snapshots = snaps;
     STATE.hotLists  = latest.lists.filter(l=>l.category==='hot-search');
     STATE.shopLists = latest.lists.filter(l=>l.category==='shopping');
